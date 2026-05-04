@@ -12,11 +12,13 @@
     "local"
   ],
   "author": "late4marshmellow",
-  "contributors": [
-    {
-      "name": "Martijn Poppen"
-    }
-  ],
+  "contributors": {
+    "developers": [
+      {
+        "name": "Martijn Poppen"
+      }
+    ]
+  },
   "category": [
     "tools"
   ],

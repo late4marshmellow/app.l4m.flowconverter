@@ -88,8 +88,7 @@
     </div>
 
     <div class="row">
-      <button id="runBtn" class="primary">Run (apply)</button>
-      <button id="previewBtn" class="secondary">Preview (soft run)</button>
+      <button id="runBtn" class="primary">Run</button>
       <button id="refreshBtn" class="secondary">Refresh devices</button>
     </div>
 
@@ -207,8 +206,10 @@
         });
       });
 
-      document.getElementById('runBtn').addEventListener('click', () => run(Homey, false));
-      document.getElementById('previewBtn').addEventListener('click', () => run(Homey, true));
+      document.getElementById('runBtn').addEventListener('click', () => {
+        const soft = !!document.getElementById('softRun').checked;
+        run(Homey, soft);
+      });
       document.getElementById('refreshBtn').addEventListener('click', () => {
         loadDevices(Homey, oldSearchEl.value, 'old');
         loadDevices(Homey, newSearchEl.value, 'new');

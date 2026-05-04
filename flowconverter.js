@@ -42,8 +42,8 @@ async function runFlowConverter({ Homey, oldIds: providedOldIds, newIds: provide
   const allDevices = Object.values(devicesRaw || {});
   console.log('[flowconverter] devices loaded:', allDevices.length);
 
-  let oldIds = Array.isArray(providedOldIds) && providedOldIds.length ? providedOldIds.slice() : [];
-  let newIds = Array.isArray(providedNewIds) && providedNewIds.length ? providedNewIds.slice() : [];
+  const oldIds = Array.isArray(providedOldIds) && providedOldIds.length ? providedOldIds.slice() : [];
+  const newIds = Array.isArray(providedNewIds) && providedNewIds.length ? providedNewIds.slice() : [];
 
   if (!oldIds.length) {
     throw new Error('No old device id provided');
