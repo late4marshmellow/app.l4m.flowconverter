@@ -1,0 +1,219 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <script src="/homey.js" data-origin="settings"></script>
+  <style>
+    body{font-family:Segoe UI,Arial;padding:16px;background:#f6f8f7}
+    .card{background:#fff;border-radius:10px;padding:14px;border:1px solid #e3ece5;max-width:720px;margin:0 auto}
+    label{display:block;margin-bottom:6px;color:#4a6b57;font-size:13px}
+    select,input{width:100%;padding:8px;border:1px solid #d7e6dd;border-radius:6px}
+    .row{display:flex;gap:8px;margin-top:12px}
+    button{padding:9px 12px;border-radius:8px;border:0;font-weight:600;cursor:pointer}
+    .primary{background:#2c8b57;color:#fff}
+    .secondary{background:#eef4f0}
+    pre{background:#0f2418;color:#dcf7e8;padding:10px;border-radius:8px;margin-top:12px;max-height:260px;overflow:auto}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Flow Converter — Settings</h2>
+    <p style="margin:6px 0 12px;color:#547365">Choose devices and run the converter directly from the app settings.</p>
+
+    <details style="margin-bottom:14px;border:1px solid #d7e6dd;border-radius:8px;padding:10px">
+      <summary style="font-weight:600;color:#2c6e49;cursor:pointer">🔑 API Key (required for writing flows)</summary>
+      <p style="margin:8px 0 6px;color:#547365;font-size:13px">
+        Homey requires a user-level API key to read and update flows.<br><br>
+        <b>How to create one:</b><br>
+        1. Open <a href="https://my.homey.app" target="_blank" style="color:#2c8b57">my.homey.app</a> in your browser<br>
+        2. Go to <b>Settings → API Keys</b><br>
+        3. Click <b>New API Key</b>, give it a name (e.g. <i>Flow Converter</i>)<br>
+        4. Enable exactly these two permissions:<br>
+        &nbsp;&nbsp;&nbsp;• <b>Flows</b> — needed to read and update your flows<br>
+        &nbsp;&nbsp;&nbsp;• <b>Devices</b> — needed to list devices for the search<br>
+        5. Click <b>Create</b>, then copy the key (it's only shown once)<br>
+        6. Paste it below and click <b>Save token</b>
+      </p>
+      <input id="personalToken" type="password" placeholder="Paste your API key here" style="margin-bottom:6px" />
+      <div class="row" style="margin-top:6px">
+        <button id="saveTokenBtn" class="primary">Save token</button>
+        <button id="clearTokenBtn" class="secondary">Clear token</button>
+        <span id="tokenStatus" style="align-self:center;font-size:13px;color:#547365"></span>
+      </div>
+    </details>
+
+    <div>
+      <label for="oldDeviceSearch">Search old device</label>
+      <input id="oldDeviceSearch" placeholder="Search old device by name or id" />
+    </div>
+
+    <div>
+      <label for="oldDevice">Old device</label>
+      <select id="oldDevice"><option value="">(loading devices...)</option></select>
+    </div>
+
+    <div style="margin-top:4px">
+      <label for="oldDeviceManual" style="color:#888;font-size:12px">Or paste old device ID manually (use this if the device was deleted)</label>
+      <input id="oldDeviceManual" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" style="font-family:monospace;font-size:12px" />
+    </div>
+
+    <details style="margin-top:10px;border:1px solid #d7e6dd;border-radius:8px;padding:10px">
+      <summary style="font-weight:600;color:#2c6e49;cursor:pointer">🔍 Find deleted devices referenced in flows</summary>
+      <p style="margin:8px 0 6px;color:#547365;font-size:13px">
+        Scans all flows for device UUIDs that no longer exist. Click a result to fill the <b>old device ID</b> field above.
+      </p>
+      <button id="scanOrphansBtn" class="secondary" style="margin-bottom:8px">Scan now</button>
+      <div id="orphanResults" style="font-size:13px;color:#547365"></div>
+    </details>
+
+    <div style="margin-top:10px">
+      <label for="newDeviceSearch">Search new device</label>
+      <input id="newDeviceSearch" placeholder="Search new device by name or id" />
+    </div>
+
+    <div style="margin-top:10px">
+      <label for="newDevice">New device</label>
+      <select id="newDevice"><option value="">(loading devices...)</option></select>
+    </div>
+
+    <div style="margin-top:4px">
+      <label for="newDeviceManual" style="color:#888;font-size:12px">Or paste new device ID manually</label>
+      <input id="newDeviceManual" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" style="font-family:monospace;font-size:12px" />
+    </div>
+
+    <div style="margin-top:10px">
+      <label for="softRun">Soft run (preview)</label>
+      <input id="softRun" type="checkbox" checked />
+    </div>
+
+    <div class="row">
+      <button id="runBtn" class="primary">Run (apply)</button>
+      <button id="previewBtn" class="secondary">Preview (soft run)</button>
+      <button id="refreshBtn" class="secondary">Refresh devices</button>
+    </div>
+
+    <pre id="log">Ready.</pre>
+  </div>
+
+  <script>
+    function appendLog(msg) {
+      const el = document.getElementById('log');
+      el.textContent = (el.textContent ? el.textContent + '\n' : '') + msg;
+      el.scrollTop = el.scrollHeight;
+    }
+
+    function populateSelect(sel, devices) {
+      sel.innerHTML = '';
+      devices.forEach(d => {
+        const o = document.createElement('option'); o.value = d.id; o.textContent = d.name; sel.appendChild(o);
+      });
+    }
+
+    async function loadDevices(Homey, q, target) {
+      try {
+        appendLog('Fetching devices' + (q ? ` for "${q}"` : '...'));
+        const path = '/devices' + (q ? `?q=${encodeURIComponent(q)}` : '/');
+        Homey.api('GET', path, null, function(err, res) {
+          if (err) { appendLog('Error fetching devices: ' + (err.message||err)); return; }
+          const oldSel = document.getElementById('oldDevice');
+          const newSel = document.getElementById('newDevice');
+          if (target === 'old') populateSelect(oldSel, res);
+          else if (target === 'new') populateSelect(newSel, res);
+          appendLog('Devices loaded: ' + res.length + (target ? ` (${target})` : ''));
+        });
+      } catch (err) { appendLog('Load devices failed: ' + err.message); }
+    }
+
+    function run(Homey, soft) {
+      const oldId = document.getElementById('oldDeviceManual').value.trim() || document.getElementById('oldDevice').value;
+      const newId = document.getElementById('newDeviceManual').value.trim() || document.getElementById('newDevice').value;
+      if (!oldId || !newId) { appendLog('Please select or enter both device IDs.'); return; }
+      appendLog((soft ? 'Previewing' : 'Running') + ` converter old=${oldId} new=${newId}`);
+      Homey.api('POST','/run/', { oldIds: [oldId], newIds: [newId], softRun: !!soft }, function(err, res) {
+        if (err) { appendLog('Run error: ' + (err.message||JSON.stringify(err))); return; }
+        if (typeof res === 'string') {
+          appendLog('Result: ' + res);
+          return;
+        }
+        appendLog(res.message || 'Finished');
+        if (res.softRun) appendLog('Note: this was a preview (soft run) — no changes applied.');
+        if (typeof res.totalUpdated === 'number') appendLog('Total flows affected: ' + res.totalUpdated);
+        if (Array.isArray(res.updatedFlows) && res.updatedFlows.length) {
+          appendLog('Updated flows:');
+          res.updatedFlows.forEach(f => appendLog('- ' + (f.name || f.title || f.id) + ' (' + f.id + ')'));
+        }
+        if (Array.isArray(res.updatedAdvancedFlows) && res.updatedAdvancedFlows.length) {
+          appendLog('Updated advanced flows:');
+          res.updatedAdvancedFlows.forEach(f => appendLog('- ' + (f.name || f.title || f.id) + ' (' + f.id + ')'));
+        }
+      });
+    }
+
+    function onHomeyReady(Homey) {
+      try { Homey.ready(); } catch (e) { /* ignore */ }
+
+      // --- Personal token handling ---
+      const tokenInput = document.getElementById('personalToken');
+      const tokenStatus = document.getElementById('tokenStatus');
+      Homey.get('personal_api_token', (err, val) => {
+        if (val) { tokenInput.value = val; tokenStatus.textContent = '✓ Token saved'; }
+      });
+      document.getElementById('saveTokenBtn').addEventListener('click', () => {
+        const t = tokenInput.value.trim();
+        if (!t) { tokenStatus.textContent = '⚠ Token is empty'; return; }
+        Homey.set('personal_api_token', t, (err) => {
+          tokenStatus.textContent = err ? ('Error: ' + err) : '✓ Saved — takes effect immediately';
+        });
+      });
+      document.getElementById('clearTokenBtn').addEventListener('click', () => {
+        Homey.unset('personal_api_token', () => {
+          tokenInput.value = '';
+          tokenStatus.textContent = 'Token cleared';
+        });
+      });
+      // --- End token handling ---
+      const oldSearchEl = document.getElementById('oldDeviceSearch');
+      const newSearchEl = document.getElementById('newDeviceSearch');
+      let oldTimer = null, newTimer = null;
+      oldSearchEl.addEventListener('input', (e) => {
+        clearTimeout(oldTimer);
+        oldTimer = setTimeout(() => loadDevices(Homey, e.target.value, 'old'), 300);
+      });
+      newSearchEl.addEventListener('input', (e) => {
+        clearTimeout(newTimer);
+        newTimer = setTimeout(() => loadDevices(Homey, e.target.value, 'new'), 300);
+      });
+      // initial load for both selects
+      loadDevices(Homey, '', 'old');
+      loadDevices(Homey, '', 'new');
+      document.getElementById('scanOrphansBtn').addEventListener('click', () => {
+        const el = document.getElementById('orphanResults');
+        el.textContent = 'Scanning…';
+        Homey.api('GET', '/orphaned-devices/', null, function(err, res) {
+          if (err) { el.textContent = 'Error: ' + (err.message || err); return; }
+          if (!res || res.length === 0) { el.textContent = '✓ No orphaned device references found.'; return; }
+          let html = '<table style="width:100%;border-collapse:collapse;margin-top:4px">'
+            + '<tr style="font-weight:600;border-bottom:1px solid #d7e6dd"><td style="padding:4px">UUID</td><td style="padding:4px">Referenced in</td><td style="padding:4px"></td></tr>';
+          res.forEach(function(o) {
+            html += '<tr style="border-bottom:1px solid #eef4f0">'
+              + '<td style="padding:4px;font-family:monospace;font-size:11px">' + o.id + '</td>'
+              + '<td style="padding:4px;font-size:11px;color:#777">' + o.flows.join(', ') + '</td>'
+              + '<td style="padding:4px"><button class="secondary" style="font-size:11px;padding:4px 8px" onclick="document.getElementById(\'oldDeviceManual\').value=\'' + o.id + '\';document.getElementById(\'oldDeviceManual\').focus()">Use as old ID</button></td>'
+              + '</tr>';
+          });
+          html += '</table>';
+          el.innerHTML = html;
+        });
+      });
+
+      document.getElementById('runBtn').addEventListener('click', () => run(Homey, false));
+      document.getElementById('previewBtn').addEventListener('click', () => run(Homey, true));
+      document.getElementById('refreshBtn').addEventListener('click', () => {
+        loadDevices(Homey, oldSearchEl.value, 'old');
+        loadDevices(Homey, newSearchEl.value, 'new');
+      });
+    }
+  </script>
+</body>
+</html>

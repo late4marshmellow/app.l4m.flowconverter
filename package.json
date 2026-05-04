@@ -1,0 +1,24 @@
+{
+  "name": "app.l4m.flowconverter",
+  "version": "1.0.0",
+  "description": "Convert and update device references in Homey flows and advanced flows.",
+  "main": "app.js",
+  "author": "late4marshmellow",
+  "contributors": [
+    { "name": "Martijn Poppen" }
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "lint": "eslint --ext .js .",
+    "lint:fix": "eslint --ext .js . --fix"
+  },
+  "dependencies": {
+    "homey-api": "*"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.1"
+  }
+}
