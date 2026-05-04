@@ -1,0 +1,8 @@
+node_modules/
+.homeybuild/
+*.tar.gz
+*.zip
+.env
+*.log
+.DS_Store
+Thumbs.db

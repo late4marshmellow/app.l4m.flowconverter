@@ -8,19 +8,36 @@
   },
   "version": "1.0.0",
   "sdk": 3,
-  "platforms": ["local"],
+  "platforms": [
+    "local"
+  ],
   "author": "late4marshmellow",
   "contributors": [
-    { "name": "Martijn Poppen" }
+    {
+      "name": "Martijn Poppen"
+    }
   ],
-  "category": ["tools"],
-  "permissions": ["homey:manager:api"],
+  "category": [
+    "tools"
+  ],
+  "permissions": [
+    "homey:manager:api"
+  ],
   "main": "app.js",
   "compatibility": ">=5.0.0",
   "icon": "assets/icon.svg",
   "api": {
-    "getDevices": { "method": "GET", "path": "/devices/" },
-    "runConverter": { "method": "POST", "path": "/run/" },
-    "getOrphanedDevices": { "method": "GET", "path": "/orphaned-devices/" }
+    "getDevices": {
+      "method": "GET",
+      "path": "/devices/"
+    },
+    "runConverter": {
+      "method": "POST",
+      "path": "/run/"
+    },
+    "getOrphanedDevices": {
+      "method": "GET",
+      "path": "/orphaned-devices/"
+    }
   }
 }
