@@ -40,6 +40,30 @@
     "getOrphanedDevices": {
       "method": "GET",
       "path": "/orphaned-devices/"
+    },
+    "getFlowList": {
+      "method": "GET",
+      "path": "/flow-list/"
+    },
+    "getFlowListNoSlash": {
+      "method": "GET",
+      "path": "/flow-list"
+    },
+    "getCapabilityList": {
+      "method": "GET",
+      "path": "/capability-list/"
+    },
+    "getCapabilityListNoSlash": {
+      "method": "GET",
+      "path": "/capability-list"
+    },
+    "getCapabilityDebug": {
+      "method": "GET",
+      "path": "/capability-debug/"
+    },
+    "getCapabilityDebugNoSlash": {
+      "method": "GET",
+      "path": "/capability-debug"
     }
   }
 }

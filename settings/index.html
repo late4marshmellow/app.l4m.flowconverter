@@ -8,22 +8,59 @@
     body{font-family:Segoe UI,Arial;padding:16px;background:#f6f8f7}
     .card{background:#fff;border-radius:10px;padding:14px;border:1px solid #e3ece5;max-width:720px;margin:0 auto}
     label{display:block;margin-bottom:6px;color:#4a6b57;font-size:13px}
-    select,input{width:100%;padding:8px;border:1px solid #d7e6dd;border-radius:6px}
+    select,input,textarea{width:100%;padding:8px;border:1px solid #d7e6dd;border-radius:6px}
+    input[type="checkbox"]{width:auto;padding:0;border:0;border-radius:0;display:inline-block !important;vertical-align:middle}
+    .panel{margin-top:10px;border:1px solid #d7e6dd;border-radius:8px;padding:10px}
+    .panel-top{margin-bottom:14px}
+    .panel-summary{font-weight:600;color:#2c6e49;cursor:pointer}
+    .helper-text{margin:8px 0 6px;color:#547365;font-size:13px}
+    .field-note{color:#888;font-size:12px}
+    .field-status{margin-top:4px;color:#7a8f82;font-size:12px}
     .row{display:flex;gap:8px;margin-top:12px}
     button{padding:9px 12px;border-radius:8px;border:0;font-weight:600;cursor:pointer}
     .primary{background:#2c8b57;color:#fff}
     .secondary{background:#eef4f0}
-    pre{background:#0f2418;color:#dcf7e8;padding:10px;border-radius:8px;margin-top:12px;max-height:260px;overflow:auto}
+    .warn{margin-top:8px;padding:8px 10px;border-radius:6px;font-size:12px;display:none}
+    .warn.error{background:#fdebec;border:1px solid #efc5c7;color:#7f1d1d}
+    .warn.info{background:#fff6db;border:1px solid #f0df9f;color:#6a5500}
+    .confirm-box{margin-top:10px;padding:10px;border-radius:8px;background:#fff2f2;border:1px solid #efc5c7;color:#6f1d1d;display:none}
+    .confirm-box .title{font-weight:600;margin-bottom:6px}
+    .confirm-actions{display:flex;gap:8px;margin-top:8px}
+    .input-error{border-color:#d64545 !important;box-shadow:0 0 0 2px rgba(214,69,69,0.12)}
+    .multi-actions{display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap}
+    .mini-btn{padding:6px 10px;border-radius:6px;border:1px solid #d7e6dd;background:#f7faf8;font-size:12px;font-weight:600;cursor:pointer}
+    .multi-count{font-size:12px;color:#547365}
+    .multi-list{margin-top:6px;border:1px solid #d7e6dd;border-radius:8px;background:#fff;max-height:220px;overflow:auto}
+    .multi-item{position:relative;display:block !important;padding:8px 10px 8px 34px;border-bottom:1px solid #eef4f0;cursor:pointer;margin-bottom:0 !important;min-height:20px}
+    .multi-item:last-child{border-bottom:0}
+    .multi-item input{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:auto;margin:0;flex:0 0 auto}
+    .multi-item span{display:block;font-size:12px;color:#2d4d3c;line-height:1.3}
+    .multi-empty{padding:10px;color:#7a8f82;font-size:12px}
+    .option-row{display:block;margin-top:10px;cursor:pointer}
+    .option-row .option-copy{display:block;min-width:0}
+    .option-row .option-head{display:flex;align-items:flex-start;gap:8px}
+    .option-row .option-title{display:block;color:#4a6b57;font-size:13px;font-weight:600;line-height:1.3}
+    .option-row .option-desc{color:#7a8f82;font-size:11px;line-height:1.3;margin-left:42px;margin-top:3px}
+    .toggle-switch{position:absolute;opacity:0;pointer-events:none}
+    .toggle-track{position:relative;flex:0 0 auto;display:inline-block;width:34px;height:20px;border-radius:10px;background:#cfd8d2;box-shadow:inset 0 1px 0 rgba(255,255,255,.55);transition:background .18s ease,box-shadow .18s ease}
+    .toggle-track::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.18);transition:transform .18s ease}
+    .toggle-switch:checked + .toggle-track{background:#2c8b57}
+    .toggle-switch:checked + .toggle-track::after{transform:translateX(14px)}
+    .toggle-switch:focus-visible + .toggle-track{box-shadow:0 0 0 2px rgba(44,139,87,.22), inset 0 1px 0 rgba(255,255,255,.55)}
+    .device-box{margin-top:12px;padding:12px;border:1px solid #d7e6dd;border-radius:10px;background:#fbfdfb}
+    .device-box-title{margin:0 0 10px;color:#2c6e49;font-size:14px;font-weight:700}
+    details > summary{list-style:none}
+    details > summary::-webkit-details-marker{display:none}
+    details > summary::before{content:'▾';display:inline-block;width:1em;margin-right:4px;color:#2c6e49;transform:rotate(-90deg);transition:transform 0.15s ease}
+    details[open] > summary::before{transform:rotate(0deg)}
+    #log{background:#0f2418;color:#dcf7e8;padding:10px;border-radius:8px;margin-top:12px;max-height:500px;min-height:200px;overflow:auto;border:1px solid #1a3a24;font-family:monospace;font-size:12px;resize:vertical;user-select:text;-webkit-user-select:text;-moz-user-select:text;width:100%;box-sizing:border-box}
   </style>
 </head>
 <body>
   <div class="card">
-    <h2>Flow Converter — Settings</h2>
-    <p style="margin:6px 0 12px;color:#547365">Choose devices and run the converter directly from the app settings.</p>
-
-    <details style="margin-bottom:14px;border:1px solid #d7e6dd;border-radius:8px;padding:10px">
-      <summary style="font-weight:600;color:#2c6e49;cursor:pointer">🔑 API Key (required for writing flows)</summary>
-      <p style="margin:8px 0 6px;color:#547365;font-size:13px">
+    <details id="apiBox" open class="panel panel-top">
+      <summary class="panel-summary">🔑 API Key (required for writing flows)</summary>
+      <p class="helper-text">
         Homey requires a user-level API key to read and update flows.<br><br>
         <b>How to create one:</b><br>
         1. Open <a href="https://my.homey.app" target="_blank" style="color:#2c8b57">my.homey.app</a> in your browser<br>
@@ -41,65 +78,204 @@
         <button id="clearTokenBtn" class="secondary">Clear token</button>
         <span id="tokenStatus" style="align-self:center;font-size:13px;color:#547365"></span>
       </div>
+      <div id="apiHint" class="warn info" style="margin-top:10px;display:none">
+        Save an API key first. The converter controls below appear only after a token is present.
+      </div>
     </details>
 
-    <div>
-      <label for="oldDeviceSearch">Search old device</label>
-      <input id="oldDeviceSearch" placeholder="Search old device by name or id" />
+    <div id="appContent" style="display:none">
+    <div style="margin-top:10px">
+      <label for="repairMode">Repair mode</label>
+      <select id="repairMode">
+        <option value="standard" selected>Standard replace</option>
+        <option value="unavailable">Unavailable cards only</option>
+        <option value="broken">Broken variables only</option>
+      </select>
     </div>
 
-    <div>
-      <label for="oldDevice">Old device</label>
-      <select id="oldDevice"><option value="">(loading devices...)</option></select>
-    </div>
-
-    <div style="margin-top:4px">
-      <label for="oldDeviceManual" style="color:#888;font-size:12px">Or paste old device ID manually (use this if the device was deleted)</label>
-      <input id="oldDeviceManual" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" style="font-family:monospace;font-size:12px" />
-    </div>
-
-    <details style="margin-top:10px;border:1px solid #d7e6dd;border-radius:8px;padding:10px">
-      <summary style="font-weight:600;color:#2c6e49;cursor:pointer">🔍 Find deleted devices referenced in flows</summary>
-      <p style="margin:8px 0 6px;color:#547365;font-size:13px">
-        Scans all flows for device UUIDs that no longer exist. Click a result to fill the <b>old device ID</b> field above.
+    <details id="deletedFinderBox" class="panel">
+      <summary class="panel-summary">🔍 Find deleted devices in flows</summary>
+      <p class="helper-text">
+        Scans all flows for device UUIDs that no longer exist. Click a result to fill the <b>old device search</b> field below.
       </p>
       <button id="scanOrphansBtn" class="secondary" style="margin-bottom:8px">Scan now</button>
       <div id="orphanResults" style="font-size:13px;color:#547365"></div>
     </details>
 
-    <div style="margin-top:10px">
-      <label for="newDeviceSearch">Search new device</label>
-      <input id="newDeviceSearch" placeholder="Search new device by name or id" />
+    <div class="device-box">
+      <div class="device-box-title">Old Device</div>
+      <div>
+        <label for="oldDeviceSearch">Search old device</label>
+        <input id="oldDeviceSearch" placeholder="Search old device by name or paste device ID" />
+        <div id="oldSearchStatus" class="field-status"></div>
+      </div>
+
+      <div>
+        <label for="oldDevice">Old device</label>
+        <select id="oldDevice"><option value="">(loading devices...)</option></select>
+      </div>
+
+      <div id="oldExistsWarning" class="warn info"></div>
     </div>
 
-    <div style="margin-top:10px">
-      <label for="newDevice">New device</label>
-      <select id="newDevice"><option value="">(loading devices...)</option></select>
+    <div class="device-box">
+      <div class="device-box-title">New Device</div>
+      <div>
+        <label for="newDeviceSearch">Search new device</label>
+        <input id="newDeviceSearch" placeholder="Search new device by name or id" />
+      </div>
+
+      <div style="margin-top:10px">
+        <label for="newDevice">New device</label>
+        <select id="newDevice"><option value="">(loading devices...)</option></select>
+      </div>
+
+      <div style="margin-top:4px">
+        <label for="newDeviceManual" class="field-note">Or paste new device ID manually</label>
+        <input id="newDeviceManual" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" style="font-family:monospace;font-size:12px" />
+      </div>
     </div>
 
-    <div style="margin-top:4px">
-      <label for="newDeviceManual" style="color:#888;font-size:12px">Or paste new device ID manually</label>
-      <input id="newDeviceManual" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" style="font-family:monospace;font-size:12px" />
-    </div>
+    <div id="sameIdWarning" class="warn error"></div>
 
-    <div style="margin-top:10px">
-      <label for="softRun">Soft run (preview)</label>
-      <input id="softRun" type="checkbox" checked />
+    <label class="option-row" for="softRun">
+      <div class="option-copy">
+        <div class="option-head">
+          <input id="softRun" class="toggle-switch" type="checkbox" checked />
+          <span class="toggle-track" aria-hidden="true"></span>
+          <span class="option-title">Soft run (preview)</span>
+        </div>
+      </div>
+    </label>
+
+    <label class="option-row" for="allowAmbiguousMerge">
+      <div class="option-copy">
+        <div class="option-head">
+          <input id="allowAmbiguousMerge" class="toggle-switch" type="checkbox" checked />
+          <span class="toggle-track" aria-hidden="true"></span>
+          <span class="option-title">Warn when both old and new IDs appear in the same flow</span>
+        </div>
+        <div class="option-desc">Conversion still runs. This only flags flows that already contain both IDs so you can review them.</div>
+      </div>
+    </label>
+
+    <label class="option-row" for="allowClassMismatch">
+      <div class="option-copy">
+        <div class="option-head">
+          <input id="allowClassMismatch" class="toggle-switch" type="checkbox" />
+          <span class="toggle-track" aria-hidden="true"></span>
+          <span class="option-title">Allow class mismatch (override safety guard)</span>
+        </div>
+        <div class="option-desc">By default, conversion is blocked if old/new devices are different classes (for example light vs sensor).</div>
+      </div>
+    </label>
+
+    <label class="option-row" for="enableTargeting">
+      <div class="option-copy">
+        <div class="option-head">
+          <input id="enableTargeting" class="toggle-switch" type="checkbox" />
+          <span class="toggle-track" aria-hidden="true"></span>
+          <span class="option-title">Enable advanced targeting (flows/capabilities)</span>
+        </div>
+        <div class="option-desc">Keep this off for normal runs. Turn on only when you need to narrow down where conversion is applied.</div>
+      </div>
+    </label>
+
+    <div id="targetingPanel" style="display:none">
+      <div style="margin-top:10px">
+        <label for="flowSearch" style="color:#547365">Find flows to include</label>
+        <input id="flowSearch" placeholder="Search flow name or ID" />
+        <div class="multi-actions">
+          <button type="button" id="flowSelectAllBtn" class="mini-btn">Select all shown</button>
+          <button type="button" id="flowClearBtn" class="mini-btn">Clear selection</button>
+          <span id="flowSelectedCount" class="multi-count">Selected: 0</span>
+        </div>
+        <div id="flowScopeSelect" class="multi-list"></div>
+        <div style="margin-top:4px;color:#7a8f82;font-size:12px">
+          Tap to select one or many flows. Leave empty to process all flows.
+        </div>
+      </div>
+
+      <div style="margin-top:10px">
+        <label for="capabilitySearch" style="color:#547365">Find convertible capabilities</label>
+        <input id="capabilitySearch" placeholder="Search capability ID" />
+        <div class="multi-actions">
+          <button type="button" id="capabilitySelectAllBtn" class="mini-btn">Select all shown</button>
+          <button type="button" id="capabilityClearBtn" class="mini-btn">Clear selection</button>
+          <span id="capabilitySelectedCount" class="multi-count">Selected: 0</span>
+        </div>
+        <div id="capabilitySelect" class="multi-list"></div>
+        <div style="margin-top:4px;color:#7a8f82;font-size:12px">
+          Capabilities shown here are valid, convertible tokens for the selected old/new devices.
+        </div>
+      </div>
     </div>
 
     <div class="row">
       <button id="runBtn" class="primary">Run</button>
       <button id="refreshBtn" class="secondary">Refresh devices</button>
+      <button id="copyLogBtn" class="secondary">Copy log</button>
     </div>
 
-    <pre id="log">Ready.</pre>
+    <div id="applyConfirmBox" class="confirm-box">
+      <div class="title">Apply changes now?</div>
+      <div>This will update flows on Homey immediately. Preview mode is off.</div>
+      <div class="confirm-actions">
+        <button id="confirmApplyBtn" class="primary">Confirm Apply</button>
+        <button id="cancelApplyBtn" class="secondary">Cancel</button>
+      </div>
+    </div>
+
+    <textarea id="log" readonly>Ready.</textarea>
+    </div>
   </div>
 
   <script>
     function appendLog(msg) {
       const el = document.getElementById('log');
-      el.textContent = (el.textContent ? el.textContent + '\n' : '') + msg;
+      el.value = (el.value ? el.value + '\n' : '') + msg;
       el.scrollTop = el.scrollHeight;
+    }
+
+    function normalizeId(value) {
+      return String(value || '').trim().toLowerCase();
+    }
+
+    function isUuid(value) {
+      return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(value || '').trim());
+    }
+
+    function clearIdErrorStyles() {
+      ['oldDevice', 'oldDeviceSearch', 'newDevice', 'newDeviceManual'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('input-error');
+      });
+    }
+
+    function setIdErrorStyles() {
+      clearIdErrorStyles();
+      const oldSearch = document.getElementById('oldDeviceSearch');
+      const newManual = document.getElementById('newDeviceManual');
+      const oldSelect = document.getElementById('oldDevice');
+      const newSelect = document.getElementById('newDevice');
+      const oldSource = isUuid(oldSearch.value.trim()) ? oldSearch : oldSelect;
+      const newSource = newManual.value.trim() ? newManual : newSelect;
+      oldSource.classList.add('input-error');
+      newSource.classList.add('input-error');
+    }
+
+    function getSelectedIds() {
+      const oldSearch = document.getElementById('oldDeviceSearch').value.trim();
+      const oldId = isUuid(oldSearch) ? oldSearch : document.getElementById('oldDevice').value;
+      const newId = document.getElementById('newDeviceManual').value.trim() || document.getElementById('newDevice').value;
+      return { oldId, newId };
+    }
+
+    function setOldSearchStatus(message, tone) {
+      const el = document.getElementById('oldSearchStatus');
+      if (!el) return;
+      el.textContent = message || '';
+      el.style.color = tone === 'good' ? '#2c6e49' : tone === 'warn' ? '#6a5500' : '#7a8f82';
     }
 
     function populateSelect(sel, devices) {
@@ -109,27 +285,338 @@
       });
     }
 
+    function populateMultiSelect(sel, items, selectedSet) {
+      const current = selectedSet || new Set(getMultiSelectedValues(sel.id));
+      sel.innerHTML = '';
+
+      const list = items || [];
+      if (!list.length) {
+        const empty = document.createElement('div');
+        empty.className = 'multi-empty';
+        empty.textContent = 'No results';
+        sel.appendChild(empty);
+        updateSelectedCount(sel.id);
+        return;
+      }
+
+      list.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'multi-item';
+
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.value = item.id;
+        cb.checked = current.has(item.id);
+
+        const text = document.createElement('span');
+        text.textContent = item.label || item.name || item.id;
+
+        row.appendChild(cb);
+        row.appendChild(text);
+        row.addEventListener('click', (event) => {
+          if (event.target !== cb) {
+            cb.checked = !cb.checked;
+            updateSelectedCount(sel.id);
+          }
+        });
+        cb.addEventListener('change', () => updateSelectedCount(sel.id));
+        sel.appendChild(row);
+      });
+
+      updateSelectedCount(sel.id);
+    }
+
+    function getMultiSelectedValues(selectId) {
+      const sel = document.getElementById(selectId);
+      if (!sel) return [];
+      return Array.from(sel.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value).filter(Boolean);
+    }
+
+    function updateSelectedCount(selectId) {
+      const map = {
+        flowScopeSelect: 'flowSelectedCount',
+        capabilitySelect: 'capabilitySelectedCount',
+      };
+      const labelId = map[selectId];
+      if (!labelId) return;
+      const el = document.getElementById(labelId);
+      if (!el) return;
+      const count = getMultiSelectedValues(selectId).length;
+      el.textContent = 'Selected: ' + count;
+    }
+
+    function setAllVisibleSelected(selectId, selected) {
+      const sel = document.getElementById(selectId);
+      if (!sel) return;
+      sel.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        cb.checked = !!selected;
+      });
+      updateSelectedCount(selectId);
+    }
+
+    let pendingDeviceLoads = 0;
+    const knownDeviceIds = new Set();
+    let oldExistenceProbe = 0;
+    let oldDeletedProbe = 0;
+    let pendingFlowLoads = 0;
+    let pendingCapabilityLoads = 0;
+    let flowSearchTimer = null;
+    let capabilitySearchTimer = null;
+
+    function updateIdentityWarning() {
+      const sameWarn = document.getElementById('sameIdWarning');
+      const { oldId, newId } = getSelectedIds();
+      const same = !!oldId && !!newId && normalizeId(oldId) === normalizeId(newId);
+      if (same) {
+        sameWarn.textContent = 'Old and new device IDs are identical. Select a different target device.';
+        sameWarn.style.display = 'block';
+        setIdErrorStyles();
+      } else {
+        sameWarn.textContent = '';
+        sameWarn.style.display = 'none';
+        clearIdErrorStyles();
+      }
+      return same;
+    }
+
+    function updateOldExistsWarning(exists, oldId) {
+      const oldWarn = document.getElementById('oldExistsWarning');
+      if (exists && oldId) {
+        oldWarn.textContent = 'Old ID currently exists as an active device on Homey. Double-check direction before applying changes.';
+        oldWarn.style.display = 'block';
+      } else {
+        oldWarn.textContent = '';
+        oldWarn.style.display = 'none';
+      }
+    }
+
+    function detectOldIdExists(Homey) {
+      const probe = ++oldExistenceProbe;
+      const oldSearch = document.getElementById('oldDeviceSearch').value.trim();
+      const oldSelect = document.getElementById('oldDevice').value;
+      const oldId = isUuid(oldSearch) ? oldSearch : oldSelect;
+      const oldIdNorm = normalizeId(oldId);
+      if (!oldIdNorm) {
+        updateOldExistsWarning(false, '');
+        return;
+      }
+
+      if (!isUuid(oldSearch) && oldSelect) {
+        updateOldExistsWarning(true, oldId);
+        return;
+      }
+
+      if (knownDeviceIds.has(oldIdNorm)) {
+        updateOldExistsWarning(true, oldId);
+        return;
+      }
+
+      Homey.api('GET', `/devices?q=${encodeURIComponent(oldIdNorm)}`, null, function(err, res) {
+        if (probe !== oldExistenceProbe) {
+          return;
+        }
+        if (err || !Array.isArray(res)) {
+          updateOldExistsWarning(false, oldId);
+          return;
+        }
+        const exists = res.some(d => normalizeId(d && d.id) === oldIdNorm);
+        if (exists) {
+          knownDeviceIds.add(oldIdNorm);
+        }
+        updateOldExistsWarning(exists, oldId);
+      });
+    }
+
+    function detectDeletedOldIdUsage(Homey, oldIdNorm) {
+      const probe = ++oldDeletedProbe;
+      if (!oldIdNorm || !isUuid(oldIdNorm) || knownDeviceIds.has(oldIdNorm)) {
+        if (probe === oldDeletedProbe) {
+          setOldSearchStatus('');
+        }
+        return;
+      }
+      Homey.api('GET', '/orphaned-devices/', null, function(err, res) {
+        if (probe !== oldDeletedProbe) {
+          return;
+        }
+        if (err || !Array.isArray(res)) {
+          setOldSearchStatus('');
+          return;
+        }
+        const match = res.find(o => normalizeId(o && o.id) === oldIdNorm);
+        if (!match) {
+          setOldSearchStatus('');
+          return;
+        }
+        const count = Array.isArray(match.flows) ? match.flows.length : 0;
+        setOldSearchStatus('Deleted device ID found in ' + count + ' flow(s).', 'warn');
+      });
+    }
+
+    function refreshValidation(Homey) {
+      updateIdentityWarning();
+      detectOldIdExists(Homey);
+    }
+
+    function updateTargetingVisibility() {
+      const panel = document.getElementById('targetingPanel');
+      const enabled = !!document.getElementById('enableTargeting').checked;
+      panel.style.display = enabled ? 'block' : 'none';
+      if (!enabled) {
+        const flowSel = document.getElementById('flowScopeSelect');
+        const capabilitySel = document.getElementById('capabilitySelect');
+        if (flowSel) flowSel.innerHTML = '';
+        if (capabilitySel) capabilitySel.innerHTML = '';
+        updateSelectedCount('flowScopeSelect');
+        updateSelectedCount('capabilitySelect');
+      }
+    }
+
+    function loadFlows(Homey, q) {
+      pendingFlowLoads += 1;
+      const flowSel = document.getElementById('flowScopeSelect');
+      const selected = new Set(getMultiSelectedValues('flowScopeSelect'));
+      const path = '/flow-list/' + (q ? `?q=${encodeURIComponent(q)}` : '');
+      Homey.api('GET', path, null, function(err, res) {
+        pendingFlowLoads -= 1;
+        if (err) {
+          appendLog('Error fetching flows: ' + (err.message || err));
+          return;
+        }
+        const items = (res || []).map(f => ({ id: f.id, label: `[${f.type}] ${f.name} (${f.id})` }));
+        populateMultiSelect(flowSel, items, selected);
+      });
+    }
+
+    function loadConvertibleCapabilities(Homey, q) {
+      const { oldId, newId } = getSelectedIds();
+      const oldNorm = normalizeId(oldId);
+      const newNorm = normalizeId(newId);
+      const capabilitySel = document.getElementById('capabilitySelect');
+      const repairMode = document.getElementById('repairMode').value;
+      if (!oldNorm || !newNorm || oldNorm === newNorm || repairMode !== 'broken') {
+        capabilitySel.innerHTML = '';
+        updateSelectedCount('capabilitySelect');
+        return;
+      }
+
+      pendingCapabilityLoads += 1;
+      const selected = new Set(getMultiSelectedValues('capabilitySelect'));
+      const qs = `?oldId=${encodeURIComponent(oldNorm)}&newId=${encodeURIComponent(newNorm)}${q ? `&q=${encodeURIComponent(q)}` : ''}`;
+      Homey.api('GET', '/capability-list/?' + qs.slice(1), null, function(err, res) {
+        pendingCapabilityLoads -= 1;
+        if (err) {
+          appendLog('Error fetching capabilities: ' + (err.message || err));
+          return;
+        }
+        const items = (res || []).map(c => ({ id: c.id, label: c.name || c.id }));
+        populateMultiSelect(capabilitySel, items, selected);
+        appendLog('Convertible capabilities loaded: ' + items.length);
+        if (!items.length) {
+          Homey.api('GET', '/capability-debug/?' + qs.slice(1), null, function(debugErr, debugRes) {
+            if (debugErr) {
+              appendLog('Capability debug failed: ' + (debugErr.message || debugErr));
+              return;
+            }
+            if (!debugRes || debugRes.ok === false) {
+              appendLog('Capability debug unavailable.');
+              return;
+            }
+            appendLog('Capability debug: oldKnown=' + !!debugRes.oldDeviceKnown
+              + ' newKnown=' + !!debugRes.newDeviceKnown
+              + ' oldCaps=' + (debugRes.oldCapabilityCount || 0)
+              + ' newCaps=' + (debugRes.newCapabilityCount || 0)
+              + ' oldTokens=' + (debugRes.tokenCountForOld || 0)
+              + ' oldTokenCaps=' + (debugRes.tokenCapabilityCountForOld || 0)
+              + ' intersection=' + (debugRes.intersectionCount || 0));
+            if ((debugRes.tokenCountForOld || 0) === 0) {
+              appendLog('No old-device capability tokens were found in flows for the selected old ID.');
+            }
+            if (Array.isArray(debugRes.sampleOldTokenCapabilities) && debugRes.sampleOldTokenCapabilities.length) {
+              appendLog('Sample old token capabilities: ' + debugRes.sampleOldTokenCapabilities.slice(0, 8).join(', '));
+            }
+            if (Array.isArray(debugRes.sampleIntersection) && debugRes.sampleIntersection.length) {
+              appendLog('Sample convertible capabilities: ' + debugRes.sampleIntersection.slice(0, 8).join(', '));
+            }
+          });
+        }
+      });
+    }
+
+    function showApplyConfirmBox() {
+      const box = document.getElementById('applyConfirmBox');
+      box.style.display = 'block';
+    }
+
+    function hideApplyConfirmBox() {
+      const box = document.getElementById('applyConfirmBox');
+      box.style.display = 'none';
+    }
+
     async function loadDevices(Homey, q, target) {
       try {
-        appendLog('Fetching devices' + (q ? ` for "${q}"` : '...'));
+        pendingDeviceLoads += 1;
+        if (pendingDeviceLoads === 1) {
+          appendLog('Fetching devices' + (q ? ` for "${q}"` : '...'));
+        }
         const path = '/devices' + (q ? `?q=${encodeURIComponent(q)}` : '/');
         Homey.api('GET', path, null, function(err, res) {
-          if (err) { appendLog('Error fetching devices: ' + (err.message||err)); return; }
+          if (err) { appendLog('Error fetching devices: ' + (err.message||err)); pendingDeviceLoads -= 1; return; }
+          if (Array.isArray(res)) {
+            res.forEach(d => {
+              if (d && d.id) knownDeviceIds.add(normalizeId(d.id));
+            });
+          }
           const oldSel = document.getElementById('oldDevice');
           const newSel = document.getElementById('newDevice');
-          if (target === 'old') populateSelect(oldSel, res);
+          if (target === 'old') {
+            populateSelect(oldSel, res);
+            const qNorm = normalizeId(q || '');
+            if (qNorm) {
+              const exact = Array.isArray(res) ? res.find(d => normalizeId(d && d.id) === qNorm) : null;
+              if (exact) {
+                setOldSearchStatus('Active device found: ' + (exact.name || exact.id), 'good');
+              } else {
+                detectDeletedOldIdUsage(Homey, qNorm);
+              }
+            } else {
+              setOldSearchStatus('');
+            }
+          }
           else if (target === 'new') populateSelect(newSel, res);
-          appendLog('Devices loaded: ' + res.length + (target ? ` (${target})` : ''));
+          pendingDeviceLoads -= 1;
+          if (pendingDeviceLoads === 0) {
+            appendLog('Devices loaded: ' + res.length);
+          }
+          refreshValidation(Homey);
         });
-      } catch (err) { appendLog('Load devices failed: ' + err.message); }
+      } catch (err) { appendLog('Load devices failed: ' + err.message); pendingDeviceLoads -= 1; }
     }
 
     function run(Homey, soft) {
-      const oldId = document.getElementById('oldDeviceManual').value.trim() || document.getElementById('oldDevice').value;
-      const newId = document.getElementById('newDeviceManual').value.trim() || document.getElementById('newDevice').value;
+      const { oldId, newId } = getSelectedIds();
+      const allowAmbiguousMerge = !!document.getElementById('allowAmbiguousMerge').checked;
+      const allowClassMismatch = !!document.getElementById('allowClassMismatch').checked;
+      const repairMode = document.getElementById('repairMode').value;
+      const targetingEnabled = !!document.getElementById('enableTargeting').checked;
+      const flowIds = targetingEnabled ? getMultiSelectedValues('flowScopeSelect') : [];
+      const capabilityFilters = targetingEnabled ? getMultiSelectedValues('capabilitySelect') : [];
       if (!oldId || !newId) { appendLog('Please select or enter both device IDs.'); return; }
-      appendLog((soft ? 'Previewing' : 'Running') + ` converter old=${oldId} new=${newId}`);
-      Homey.api('POST','/run/', { oldIds: [oldId], newIds: [newId], softRun: !!soft }, function(err, res) {
+      if (updateIdentityWarning()) {
+        appendLog('Please select different old and new device IDs. They are currently identical.');
+        return;
+      }
+      appendLog((soft ? 'Previewing' : 'Running') + ` converter old=${oldId} new=${newId} mode=${repairMode}` + (flowIds.length ? ` scope=${flowIds.length} flow(s)` : '') + (capabilityFilters.length ? ` capabilities=${capabilityFilters.length}` : '') + (allowClassMismatch ? ' allowClassMismatch=true' : ''));
+      Homey.api('POST','/run/', {
+        oldIds: [oldId],
+        newIds: [newId],
+        flowIds,
+        repairMode,
+        capabilityFilters,
+        allowAmbiguousMerge,
+        allowClassMismatch,
+        softRun: !!soft,
+      }, function(err, res) {
         if (err) { appendLog('Run error: ' + (err.message||JSON.stringify(err))); return; }
         if (typeof res === 'string') {
           appendLog('Result: ' + res);
@@ -138,13 +625,54 @@
         appendLog(res.message || 'Finished');
         if (res.softRun) appendLog('Note: this was a preview (soft run) — no changes applied.');
         if (typeof res.totalUpdated === 'number') appendLog('Total flows affected: ' + res.totalUpdated);
+        if (typeof res.totalVariableTokenReplacements === 'number') {
+          appendLog('Total variable tokens converted: ' + res.totalVariableTokenReplacements);
+        }
+        if (Array.isArray(res.debugTokenMatches) && res.debugTokenMatches.length) {
+          appendLog('Debug token matches found:');
+          res.debugTokenMatches.forEach(group => {
+            appendLog('- [' + group.type + '] ' + (group.flowName || group.flowId) + ' (' + group.flowId + ')');
+            group.matches.slice(0, 5).forEach(m => {
+              appendLog('  token=' + m.token + ' path=' + m.path + ' sourceBroken=' + m.sourceBroken + ' targetHasCapability=' + m.targetHasCapability);
+            });
+            if (group.matches.length > 5) {
+              appendLog('  ... +' + (group.matches.length - 5) + ' more');
+            }
+          });
+        }
+        if (Array.isArray(res.scopedToFlowIds) && res.scopedToFlowIds.length) {
+          appendLog('Scope: only selected flow IDs were processed.');
+        }
+        if (res.repairMode) {
+          appendLog('Repair mode active: ' + res.repairMode);
+        }
+        if (Array.isArray(res.capabilityFilters) && res.capabilityFilters.length) {
+          appendLog('Capability filter active: only selected convertible capabilities were processed.');
+        }
+        if (res.onlyUnavailableCards) {
+          appendLog('Unavailable-card behavior active.');
+        }
+        if (res.onlyBrokenVariables) {
+          appendLog('Broken-variable behavior active.');
+        }
+        if (Array.isArray(res.classMismatchPairs) && res.classMismatchPairs.length) {
+          appendLog('Class mismatch detected:');
+          res.classMismatchPairs.forEach(p => appendLog('- ' + p.oldClass + ' -> ' + p.newClass + ' (' + p.oldId + ' -> ' + p.newId + ')'));
+        }
+        if (res.classGuardBypassedForBrokenVariables) {
+          appendLog('Class guard bypassed because broken-variable mode was enabled.');
+        }
+        if (Array.isArray(res.ambiguousFlows) && res.ambiguousFlows.length) {
+          appendLog('Flows containing both old and new IDs:');
+          res.ambiguousFlows.forEach(f => appendLog('- [' + f.type + '] ' + (f.name || f.id) + ' (' + f.id + ')'));
+        }
         if (Array.isArray(res.updatedFlows) && res.updatedFlows.length) {
           appendLog('Updated flows:');
-          res.updatedFlows.forEach(f => appendLog('- ' + (f.name || f.title || f.id) + ' (' + f.id + ')'));
+          res.updatedFlows.forEach(f => appendLog('- ' + (f.name || f.title || f.id) + ' (' + f.id + ')' + (typeof f.variableTokenReplacements === 'number' ? ' variableTokens=' + f.variableTokenReplacements : '')));
         }
         if (Array.isArray(res.updatedAdvancedFlows) && res.updatedAdvancedFlows.length) {
           appendLog('Updated advanced flows:');
-          res.updatedAdvancedFlows.forEach(f => appendLog('- ' + (f.name || f.title || f.id) + ' (' + f.id + ')'));
+          res.updatedAdvancedFlows.forEach(f => appendLog('- ' + (f.name || f.title || f.id) + ' (' + f.id + ')' + (typeof f.variableTokenReplacements === 'number' ? ' variableTokens=' + f.variableTokenReplacements : '')));
         }
       });
     }
@@ -155,29 +683,67 @@
       // --- Personal token handling ---
       const tokenInput = document.getElementById('personalToken');
       const tokenStatus = document.getElementById('tokenStatus');
+      const apiBox = document.getElementById('apiBox');
+      const apiHint = document.getElementById('apiHint');
+      const appContent = document.getElementById('appContent');
+
+      function updateAppVisibility(hasToken) {
+        apiBox.open = !hasToken;
+        if (appContent) appContent.style.display = hasToken ? 'block' : 'none';
+        if (apiHint) {
+          apiHint.style.display = hasToken ? 'none' : 'block';
+        }
+      }
+
       Homey.get('personal_api_token', (err, val) => {
+        const hasToken = !!val;
         if (val) { tokenInput.value = val; tokenStatus.textContent = '✓ Token saved'; }
+        updateAppVisibility(hasToken);
       });
       document.getElementById('saveTokenBtn').addEventListener('click', () => {
         const t = tokenInput.value.trim();
         if (!t) { tokenStatus.textContent = '⚠ Token is empty'; return; }
         Homey.set('personal_api_token', t, (err) => {
           tokenStatus.textContent = err ? ('Error: ' + err) : '✓ Saved — takes effect immediately';
+          if (!err) updateAppVisibility(true);
         });
       });
       document.getElementById('clearTokenBtn').addEventListener('click', () => {
         Homey.unset('personal_api_token', () => {
           tokenInput.value = '';
           tokenStatus.textContent = 'Token cleared';
+          updateAppVisibility(false);
         });
       });
       // --- End token handling ---
       const oldSearchEl = document.getElementById('oldDeviceSearch');
       const newSearchEl = document.getElementById('newDeviceSearch');
+      const newManualEl = document.getElementById('newDeviceManual');
+      const oldSelectEl = document.getElementById('oldDevice');
+      const newSelectEl = document.getElementById('newDevice');
+      const repairModeEl = document.getElementById('repairMode');
+      const enableTargetingEl = document.getElementById('enableTargeting');
+      const flowSearchEl = document.getElementById('flowSearch');
+      const capabilitySearchEl = document.getElementById('capabilitySearch');
+      const flowScopeSel = document.getElementById('flowScopeSelect');
+      const capabilitySel = document.getElementById('capabilitySelect');
+      const deletedFinderBox = document.getElementById('deletedFinderBox');
+      function maybeLoadCapabilities() {
+        if (!enableTargetingEl.checked) {
+          return;
+        }
+        loadConvertibleCapabilities(Homey, capabilitySearchEl.value);
+      }
       let oldTimer = null, newTimer = null;
       oldSearchEl.addEventListener('input', (e) => {
         clearTimeout(oldTimer);
         oldTimer = setTimeout(() => loadDevices(Homey, e.target.value, 'old'), 300);
+        if (deletedFinderBox && isUuid(e.target.value)) {
+          deletedFinderBox.open = false;
+        }
+        refreshValidation(Homey);
+        clearTimeout(capabilitySearchTimer);
+        capabilitySearchTimer = setTimeout(() => maybeLoadCapabilities(), 250);
       });
       newSearchEl.addEventListener('input', (e) => {
         clearTimeout(newTimer);
@@ -186,6 +752,50 @@
       // initial load for both selects
       loadDevices(Homey, '', 'old');
       loadDevices(Homey, '', 'new');
+      updateTargetingVisibility();
+      newManualEl.addEventListener('input', () => {
+        updateIdentityWarning();
+        clearTimeout(capabilitySearchTimer);
+        capabilitySearchTimer = setTimeout(() => maybeLoadCapabilities(), 250);
+      });
+      oldSelectEl.addEventListener('change', () => {
+        refreshValidation(Homey);
+        maybeLoadCapabilities();
+      });
+      newSelectEl.addEventListener('change', () => {
+        updateIdentityWarning();
+        maybeLoadCapabilities();
+      });
+      repairModeEl.addEventListener('change', () => {
+        maybeLoadCapabilities();
+      });
+      enableTargetingEl.addEventListener('change', () => {
+        updateTargetingVisibility();
+        if (enableTargetingEl.checked) {
+          loadFlows(Homey, flowSearchEl.value);
+          maybeLoadCapabilities();
+        }
+      });
+      flowSearchEl.addEventListener('input', e => {
+        if (!enableTargetingEl.checked) {
+          return;
+        }
+        clearTimeout(flowSearchTimer);
+        flowSearchTimer = setTimeout(() => loadFlows(Homey, e.target.value), 250);
+      });
+      capabilitySearchEl.addEventListener('input', e => {
+        if (!enableTargetingEl.checked) {
+          return;
+        }
+        clearTimeout(capabilitySearchTimer);
+        capabilitySearchTimer = setTimeout(() => maybeLoadCapabilities(), 250);
+      });
+      flowScopeSel.addEventListener('change', () => updateSelectedCount('flowScopeSelect'));
+      capabilitySel.addEventListener('change', () => updateSelectedCount('capabilitySelect'));
+      document.getElementById('flowSelectAllBtn').addEventListener('click', () => setAllVisibleSelected('flowScopeSelect', true));
+      document.getElementById('flowClearBtn').addEventListener('click', () => setAllVisibleSelected('flowScopeSelect', false));
+      document.getElementById('capabilitySelectAllBtn').addEventListener('click', () => setAllVisibleSelected('capabilitySelect', true));
+      document.getElementById('capabilityClearBtn').addEventListener('click', () => setAllVisibleSelected('capabilitySelect', false));
       document.getElementById('scanOrphansBtn').addEventListener('click', () => {
         const el = document.getElementById('orphanResults');
         el.textContent = 'Scanning…';
@@ -198,7 +808,7 @@
             html += '<tr style="border-bottom:1px solid #eef4f0">'
               + '<td style="padding:4px;font-family:monospace;font-size:11px">' + o.id + '</td>'
               + '<td style="padding:4px;font-size:11px;color:#777">' + o.flows.join(', ') + '</td>'
-              + '<td style="padding:4px"><button class="secondary" style="font-size:11px;padding:4px 8px" onclick="document.getElementById(\'oldDeviceManual\').value=\'' + o.id + '\';document.getElementById(\'oldDeviceManual\').focus()">Use as old ID</button></td>'
+              + '<td style="padding:4px"><button class="secondary" style="font-size:11px;padding:4px 8px" onclick="(function(){var el=document.getElementById(\'oldDeviceSearch\');el.value=\'' + o.id + '\';el.dispatchEvent(new Event(\'input\'));el.focus();})();">Use as old ID</button></td>'
               + '</tr>';
           });
           html += '</table>';
@@ -208,11 +818,72 @@
 
       document.getElementById('runBtn').addEventListener('click', () => {
         const soft = !!document.getElementById('softRun').checked;
-        run(Homey, soft);
+        if (soft) {
+          hideApplyConfirmBox();
+          run(Homey, true);
+          return;
+        }
+
+        const ids = getSelectedIds();
+        if (!ids.oldId || !ids.newId) {
+          appendLog('Please select or enter both device IDs.');
+          return;
+        }
+        if (updateIdentityWarning()) {
+          appendLog('Please select different old and new device IDs. They are currently identical.');
+          return;
+        }
+
+        showApplyConfirmBox();
+        appendLog('Awaiting apply confirmation...');
       });
+
+      document.getElementById('confirmApplyBtn').addEventListener('click', () => {
+        hideApplyConfirmBox();
+        run(Homey, false);
+      });
+
+      document.getElementById('cancelApplyBtn').addEventListener('click', () => {
+        hideApplyConfirmBox();
+        appendLog('Apply canceled by user.');
+      });
+
       document.getElementById('refreshBtn').addEventListener('click', () => {
         loadDevices(Homey, oldSearchEl.value, 'old');
         loadDevices(Homey, newSearchEl.value, 'new');
+        if (enableTargetingEl.checked) {
+          loadFlows(Homey, flowSearchEl.value);
+          loadConvertibleCapabilities(Homey, capabilitySearchEl.value);
+        }
+      });
+      document.getElementById('copyLogBtn').addEventListener('click', () => {
+        const el = document.getElementById('log');
+        const text = el.value;
+        const btn = document.getElementById('copyLogBtn');
+        const orig = btn.textContent;
+        
+        function showStatus(msg, duration) {
+          btn.textContent = msg;
+          setTimeout(() => { btn.textContent = orig; }, duration || 1500);
+        }
+        
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(() => {
+            showStatus('Copied!');
+          }).catch(() => fallbackCopy());
+        } else {
+          fallbackCopy();
+        }
+        
+        function fallbackCopy() {
+          el.select();
+          try {
+            document.execCommand('copy');
+            showStatus('Copied! (use Ctrl+C)');
+          } catch (err) {
+            showStatus('Select & copy manually');
+          }
+        }
       });
     }
   </script>
