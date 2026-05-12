@@ -66,6 +66,15 @@ function collectTokens(obj, maxMatches = 5000) {
   return matches;
 }
 
+function flowContainsDeviceRef(flowObj, deviceId) {
+  const id = String(deviceId || '').toLowerCase().trim();
+  if (!id) {
+    return false;
+  }
+  const haystack = JSON.stringify(flowObj || {}).toLowerCase();
+  return haystack.includes(`homey:device:${id}`);
+}
+
 module.exports = {
   async getDevices({ query } = {}) {
     try {
@@ -139,6 +148,8 @@ module.exports = {
     try {
       const q = query && query.q ? String(query.q).toLowerCase().trim() : '';
       const limit = query && query.limit ? Math.max(1, parseInt(query.limit, 10) || 200) : 200;
+      const oldId = query && query.oldId ? String(query.oldId).toLowerCase().trim() : '';
+      const newId = query && query.newId ? String(query.newId).toLowerCase().trim() : '';
       const homeyApi = getHomeyApi();
 
       const [flowsRaw, advancedRaw] = await Promise.all([
@@ -147,16 +158,24 @@ module.exports = {
       ]);
 
       let flows = [
-        ...Object.values(flowsRaw || {}).map(f => ({ id: f.id, name: f.name || f.id, type: 'flow' })),
-        ...Object.values(advancedRaw || {}).map(f => ({ id: f.id, name: f.name || f.id, type: 'advanced' })),
+        ...Object.values(flowsRaw || {}).map(f => ({ id: f.id, name: f.name || f.id, type: 'flow', raw: f })),
+        ...Object.values(advancedRaw || {}).map(f => ({ id: f.id, name: f.name || f.id, type: 'advanced', raw: f })),
       ];
+
+      if (oldId || newId) {
+        flows = flows.filter(f => {
+          const hasOld = oldId ? flowContainsDeviceRef(f.raw, oldId) : false;
+          const hasNew = newId ? flowContainsDeviceRef(f.raw, newId) : false;
+          return hasOld || hasNew;
+        });
+      }
 
       if (q) {
         flows = flows.filter(f => `${f.id} ${f.name} ${f.type}`.toLowerCase().includes(q));
       }
 
       flows.sort((a, b) => a.name.localeCompare(b.name));
-      return flows.slice(0, limit);
+      return flows.slice(0, limit).map(f => ({ id: f.id, name: f.name, type: f.type }));
     } catch (err) {
       throw new Error(`Failed to fetch flows: ${  err && err.message ? err.message : String(err)}`);
     }

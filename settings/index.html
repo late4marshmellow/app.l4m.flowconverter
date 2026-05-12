@@ -11,6 +11,7 @@
     select,input,textarea{width:100%;padding:8px;border:1px solid #d7e6dd;border-radius:6px}
     input[type="checkbox"]{width:auto;padding:0;border:0;border-radius:0;display:inline-block !important;vertical-align:middle}
     .panel{margin-top:10px;border:1px solid #d7e6dd;border-radius:8px;padding:10px}
+    .panel.compact{padding:8px}
     .panel-top{margin-bottom:14px}
     .panel-summary{font-weight:600;color:#2c6e49;cursor:pointer}
     .helper-text{margin:8px 0 6px;color:#547365;font-size:13px}
@@ -26,6 +27,11 @@
     .confirm-box{margin-top:10px;padding:10px;border-radius:8px;background:#fff2f2;border:1px solid #efc5c7;color:#6f1d1d;display:none}
     .confirm-box .title{font-weight:600;margin-bottom:6px}
     .confirm-actions{display:flex;gap:8px;margin-top:8px}
+    .run-feedback{display:none;margin-top:10px;padding:10px 12px;border-radius:8px;border:1px solid transparent;font-size:13px;font-weight:600;line-height:1.35}
+    .run-feedback.info{display:block;background:#eef6ff;border-color:#c6dbf6;color:#133a5e}
+    .run-feedback.success{display:block;background:#e9f9ef;border-color:#bfe8cc;color:#0f5132}
+    .run-feedback.warn{display:block;background:#fff7e5;border-color:#f0df9f;color:#6a5500}
+    .run-feedback.error{display:block;background:#fdebec;border-color:#efc5c7;color:#7f1d1d}
     .input-error{border-color:#d64545 !important;box-shadow:0 0 0 2px rgba(214,69,69,0.12)}
     .multi-actions{display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap}
     .mini-btn{padding:6px 10px;border-radius:6px;border:1px solid #d7e6dd;background:#f7faf8;font-size:12px;font-weight:600;cursor:pointer}
@@ -151,11 +157,11 @@
     <label class="option-row" for="allowAmbiguousMerge">
       <div class="option-copy">
         <div class="option-head">
-          <input id="allowAmbiguousMerge" class="toggle-switch" type="checkbox" checked />
+          <input id="allowAmbiguousMerge" class="toggle-switch" type="checkbox" />
           <span class="toggle-track" aria-hidden="true"></span>
-          <span class="option-title">Warn when both old and new IDs appear in the same flow</span>
+          <span class="option-title">Allow both old and new IDs in the same flow</span>
         </div>
-        <div class="option-desc">Conversion still runs. This only flags flows that already contain both IDs so you can review them.</div>
+        <div class="option-desc">When off, those flows are skipped so you can review them safely before applying changes.</div>
       </div>
     </label>
 
@@ -182,33 +188,39 @@
     </label>
 
     <div id="targetingPanel" style="display:none">
-      <div style="margin-top:10px">
-        <label for="flowSearch" style="color:#547365">Find flows to include</label>
-        <input id="flowSearch" placeholder="Search flow name or ID" />
-        <div class="multi-actions">
-          <button type="button" id="flowSelectAllBtn" class="mini-btn">Select all shown</button>
-          <button type="button" id="flowClearBtn" class="mini-btn">Clear selection</button>
-          <span id="flowSelectedCount" class="multi-count">Selected: 0</span>
+      <details class="panel compact">
+        <summary class="panel-summary">Flow targeting</summary>
+        <div style="margin-top:10px">
+          <label for="flowSearch" style="color:#547365">Find flows to include</label>
+          <input id="flowSearch" placeholder="Search flow name or ID" />
+          <div class="multi-actions">
+            <button type="button" id="flowSelectAllBtn" class="mini-btn">Select all shown</button>
+            <button type="button" id="flowClearBtn" class="mini-btn">Clear all selected</button>
+            <span id="flowSelectedCount" class="multi-count">Selected: 0</span>
+          </div>
+          <div id="flowScopeSelect" class="multi-list"></div>
+          <div style="margin-top:4px;color:#7a8f82;font-size:12px">
+            Only flows that reference selected old/new IDs are listed. Selections are preserved across searches.
+          </div>
         </div>
-        <div id="flowScopeSelect" class="multi-list"></div>
-        <div style="margin-top:4px;color:#7a8f82;font-size:12px">
-          Tap to select one or many flows. Leave empty to process all flows.
-        </div>
-      </div>
+      </details>
 
-      <div style="margin-top:10px">
-        <label for="capabilitySearch" style="color:#547365">Find convertible capabilities</label>
-        <input id="capabilitySearch" placeholder="Search capability ID" />
-        <div class="multi-actions">
-          <button type="button" id="capabilitySelectAllBtn" class="mini-btn">Select all shown</button>
-          <button type="button" id="capabilityClearBtn" class="mini-btn">Clear selection</button>
-          <span id="capabilitySelectedCount" class="multi-count">Selected: 0</span>
+      <details class="panel compact">
+        <summary class="panel-summary">Capability targeting</summary>
+        <div style="margin-top:10px">
+          <label for="capabilitySearch" style="color:#547365">Find convertible capabilities</label>
+          <input id="capabilitySearch" placeholder="Search capability ID" />
+          <div class="multi-actions">
+            <button type="button" id="capabilitySelectAllBtn" class="mini-btn">Select all shown</button>
+            <button type="button" id="capabilityClearBtn" class="mini-btn">Clear all selected</button>
+            <span id="capabilitySelectedCount" class="multi-count">Selected: 0</span>
+          </div>
+          <div id="capabilitySelect" class="multi-list"></div>
+          <div style="margin-top:4px;color:#7a8f82;font-size:12px">
+            Capabilities shown here are valid, convertible tokens for the selected old/new devices.
+          </div>
         </div>
-        <div id="capabilitySelect" class="multi-list"></div>
-        <div style="margin-top:4px;color:#7a8f82;font-size:12px">
-          Capabilities shown here are valid, convertible tokens for the selected old/new devices.
-        </div>
-      </div>
+      </details>
     </div>
 
     <div class="row">
@@ -217,9 +229,12 @@
       <button id="copyLogBtn" class="secondary">Copy log</button>
     </div>
 
+    <div id="runFeedback" class="run-feedback" aria-live="polite"></div>
+
     <div id="applyConfirmBox" class="confirm-box">
       <div class="title">Apply changes now?</div>
-      <div>This will update flows on Homey immediately. Preview mode is off.</div>
+      <div>This operation is irreversible. Flows will be updated immediately on Homey, at your own risk.</div>
+      <div style="margin-top:4px">Run Preview first and review skipped/ambiguous flow warnings before applying.</div>
       <div class="confirm-actions">
         <button id="confirmApplyBtn" class="primary">Confirm Apply</button>
         <button id="cancelApplyBtn" class="secondary">Cancel</button>
@@ -235,6 +250,21 @@
       const el = document.getElementById('log');
       el.value = (el.value ? el.value + '\n' : '') + msg;
       el.scrollTop = el.scrollHeight;
+    }
+
+    function setRunFeedback(tone, message) {
+      const el = document.getElementById('runFeedback');
+      if (!el) return;
+      const nextTone = ['info', 'success', 'warn', 'error'].includes(tone) ? tone : 'info';
+      el.className = 'run-feedback ' + nextTone;
+      el.textContent = message || '';
+    }
+
+    function clearRunFeedback() {
+      const el = document.getElementById('runFeedback');
+      if (!el) return;
+      el.className = 'run-feedback';
+      el.textContent = '';
     }
 
     function normalizeId(value) {
@@ -316,10 +346,16 @@
         row.addEventListener('click', (event) => {
           if (event.target !== cb) {
             cb.checked = !cb.checked;
+            if (cb.checked) current.add(cb.value);
+            else current.delete(cb.value);
             updateSelectedCount(sel.id);
           }
         });
-        cb.addEventListener('change', () => updateSelectedCount(sel.id));
+        cb.addEventListener('change', () => {
+          if (cb.checked) current.add(cb.value);
+          else current.delete(cb.value);
+          updateSelectedCount(sel.id);
+        });
         sel.appendChild(row);
       });
 
@@ -341,16 +377,33 @@
       if (!labelId) return;
       const el = document.getElementById(labelId);
       if (!el) return;
-      const count = getMultiSelectedValues(selectId).length;
+      const count = getSelectionSet(selectId).size;
       el.textContent = 'Selected: ' + count;
     }
 
     function setAllVisibleSelected(selectId, selected) {
       const sel = document.getElementById(selectId);
+      const selectedSet = getSelectionSet(selectId);
       if (!sel) return;
       sel.querySelectorAll('input[type="checkbox"]').forEach(cb => {
         cb.checked = !!selected;
+        if (cb.value) {
+          if (selected) selectedSet.add(cb.value);
+          else selectedSet.delete(cb.value);
+        }
       });
+      updateSelectedCount(selectId);
+    }
+
+    function clearSelection(selectId) {
+      const selectedSet = getSelectionSet(selectId);
+      selectedSet.clear();
+      const sel = document.getElementById(selectId);
+      if (sel) {
+        sel.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+          cb.checked = false;
+        });
+      }
       updateSelectedCount(selectId);
     }
 
@@ -362,6 +415,12 @@
     let pendingCapabilityLoads = 0;
     let flowSearchTimer = null;
     let capabilitySearchTimer = null;
+    const flowSelectedIds = new Set();
+    const capabilitySelectedIds = new Set();
+
+    function getSelectionSet(selectId) {
+      return selectId === 'flowScopeSelect' ? flowSelectedIds : capabilitySelectedIds;
+    }
 
     function updateIdentityWarning() {
       const sameWarn = document.getElementById('sameIdWarning');
@@ -465,6 +524,8 @@
       if (!enabled) {
         const flowSel = document.getElementById('flowScopeSelect');
         const capabilitySel = document.getElementById('capabilitySelect');
+        flowSelectedIds.clear();
+        capabilitySelectedIds.clear();
         if (flowSel) flowSel.innerHTML = '';
         if (capabilitySel) capabilitySel.innerHTML = '';
         updateSelectedCount('flowScopeSelect');
@@ -475,8 +536,12 @@
     function loadFlows(Homey, q) {
       pendingFlowLoads += 1;
       const flowSel = document.getElementById('flowScopeSelect');
-      const selected = new Set(getMultiSelectedValues('flowScopeSelect'));
-      const path = '/flow-list/' + (q ? `?q=${encodeURIComponent(q)}` : '');
+      const { oldId, newId } = getSelectedIds();
+      const params = [];
+      if (q) params.push(`q=${encodeURIComponent(q)}`);
+      if (oldId) params.push(`oldId=${encodeURIComponent(oldId)}`);
+      if (newId) params.push(`newId=${encodeURIComponent(newId)}`);
+      const path = '/flow-list/' + (params.length ? `?${params.join('&')}` : '');
       Homey.api('GET', path, null, function(err, res) {
         pendingFlowLoads -= 1;
         if (err) {
@@ -484,7 +549,7 @@
           return;
         }
         const items = (res || []).map(f => ({ id: f.id, label: `[${f.type}] ${f.name} (${f.id})` }));
-        populateMultiSelect(flowSel, items, selected);
+        populateMultiSelect(flowSel, items, flowSelectedIds);
       });
     }
 
@@ -493,15 +558,13 @@
       const oldNorm = normalizeId(oldId);
       const newNorm = normalizeId(newId);
       const capabilitySel = document.getElementById('capabilitySelect');
-      const repairMode = document.getElementById('repairMode').value;
-      if (!oldNorm || !newNorm || oldNorm === newNorm || repairMode !== 'broken') {
+      if (!oldNorm || !newNorm || oldNorm === newNorm) {
         capabilitySel.innerHTML = '';
         updateSelectedCount('capabilitySelect');
         return;
       }
 
       pendingCapabilityLoads += 1;
-      const selected = new Set(getMultiSelectedValues('capabilitySelect'));
       const qs = `?oldId=${encodeURIComponent(oldNorm)}&newId=${encodeURIComponent(newNorm)}${q ? `&q=${encodeURIComponent(q)}` : ''}`;
       Homey.api('GET', '/capability-list/?' + qs.slice(1), null, function(err, res) {
         pendingCapabilityLoads -= 1;
@@ -510,7 +573,7 @@
           return;
         }
         const items = (res || []).map(c => ({ id: c.id, label: c.name || c.id }));
-        populateMultiSelect(capabilitySel, items, selected);
+        populateMultiSelect(capabilitySel, items, capabilitySelectedIds);
         appendLog('Convertible capabilities loaded: ' + items.length);
         if (!items.length) {
           Homey.api('GET', '/capability-debug/?' + qs.slice(1), null, function(debugErr, debugRes) {
@@ -599,13 +662,19 @@
       const allowClassMismatch = !!document.getElementById('allowClassMismatch').checked;
       const repairMode = document.getElementById('repairMode').value;
       const targetingEnabled = !!document.getElementById('enableTargeting').checked;
-      const flowIds = targetingEnabled ? getMultiSelectedValues('flowScopeSelect') : [];
-      const capabilityFilters = targetingEnabled ? getMultiSelectedValues('capabilitySelect') : [];
-      if (!oldId || !newId) { appendLog('Please select or enter both device IDs.'); return; }
-      if (updateIdentityWarning()) {
-        appendLog('Please select different old and new device IDs. They are currently identical.');
+      const flowIds = targetingEnabled ? Array.from(flowSelectedIds) : [];
+      const capabilityFilters = targetingEnabled ? Array.from(capabilitySelectedIds) : [];
+      if (!oldId || !newId) {
+        appendLog('Please select or enter both device IDs.');
+        setRunFeedback('error', 'Run blocked: select both old and new device IDs first.');
         return;
       }
+      if (updateIdentityWarning()) {
+        appendLog('Please select different old and new device IDs. They are currently identical.');
+        setRunFeedback('error', 'Run blocked: old and new device IDs are identical.');
+        return;
+      }
+      setRunFeedback('info', (soft ? 'Preview running...' : 'Conversion running...') + ' check the result banner and log for details.');
       appendLog((soft ? 'Previewing' : 'Running') + ` converter old=${oldId} new=${newId} mode=${repairMode}` + (flowIds.length ? ` scope=${flowIds.length} flow(s)` : '') + (capabilityFilters.length ? ` capabilities=${capabilityFilters.length}` : '') + (allowClassMismatch ? ' allowClassMismatch=true' : ''));
       Homey.api('POST','/run/', {
         oldIds: [oldId],
@@ -617,10 +686,34 @@
         allowClassMismatch,
         softRun: !!soft,
       }, function(err, res) {
-        if (err) { appendLog('Run error: ' + (err.message||JSON.stringify(err))); return; }
+        if (err) {
+          appendLog('Run error: ' + (err.message||JSON.stringify(err)));
+          setRunFeedback('error', 'Conversion failed: ' + (err.message || 'unknown error'));
+          return;
+        }
         if (typeof res === 'string') {
           appendLog('Result: ' + res);
+          setRunFeedback('info', res);
           return;
+        }
+        const updatedCount = typeof res.totalUpdated === 'number' ? res.totalUpdated : 0;
+        const skippedCount = Array.isArray(res.skippedAmbiguousFlows) ? res.skippedAmbiguousFlows.length : 0;
+        if (res.softRun) {
+          if (updatedCount > 0) {
+            setRunFeedback('success', 'Preview complete: ' + updatedCount + ' flow(s) would be updated. No changes were applied.');
+          } else if (skippedCount > 0) {
+            setRunFeedback('warn', 'Preview complete: no changes would be applied because ' + skippedCount + ' flow(s) were skipped by the mixed-ID safety guard.');
+          } else {
+            setRunFeedback('info', 'Preview complete: no matching references found to update.');
+          }
+        } else {
+          if (updatedCount > 0) {
+            setRunFeedback('success', 'Conversion applied: ' + updatedCount + ' flow(s) updated successfully.');
+          } else if (skippedCount > 0) {
+            setRunFeedback('warn', 'No changes applied: ' + skippedCount + ' flow(s) were skipped by the mixed-ID safety guard.');
+          } else {
+            setRunFeedback('info', 'No changes applied: no matching references were found.');
+          }
         }
         appendLog(res.message || 'Finished');
         if (res.softRun) appendLog('Note: this was a preview (soft run) — no changes applied.');
@@ -665,6 +758,11 @@
         if (Array.isArray(res.ambiguousFlows) && res.ambiguousFlows.length) {
           appendLog('Flows containing both old and new IDs:');
           res.ambiguousFlows.forEach(f => appendLog('- [' + f.type + '] ' + (f.name || f.id) + ' (' + f.id + ')'));
+        }
+        if (Array.isArray(res.skippedAmbiguousFlows) && res.skippedAmbiguousFlows.length) {
+          appendLog('Skipped flows because both old and new IDs were already present:');
+          res.skippedAmbiguousFlows.forEach(f => appendLog('- [' + f.type + '] ' + (f.name || f.id) + ' (' + f.id + ')'));
+          appendLog('Next step: review those flows manually, then enable "Allow conversion when both old and new IDs are in the same flow" only if intentional.');
         }
         if (Array.isArray(res.updatedFlows) && res.updatedFlows.length) {
           appendLog('Updated flows:');
@@ -742,6 +840,10 @@
           deletedFinderBox.open = false;
         }
         refreshValidation(Homey);
+        if (enableTargetingEl.checked) {
+          clearTimeout(flowSearchTimer);
+          flowSearchTimer = setTimeout(() => loadFlows(Homey, flowSearchEl.value), 250);
+        }
         clearTimeout(capabilitySearchTimer);
         capabilitySearchTimer = setTimeout(() => maybeLoadCapabilities(), 250);
       });
@@ -755,16 +857,22 @@
       updateTargetingVisibility();
       newManualEl.addEventListener('input', () => {
         updateIdentityWarning();
+        if (enableTargetingEl.checked) {
+          clearTimeout(flowSearchTimer);
+          flowSearchTimer = setTimeout(() => loadFlows(Homey, flowSearchEl.value), 250);
+        }
         clearTimeout(capabilitySearchTimer);
         capabilitySearchTimer = setTimeout(() => maybeLoadCapabilities(), 250);
       });
       oldSelectEl.addEventListener('change', () => {
         refreshValidation(Homey);
         maybeLoadCapabilities();
+        if (enableTargetingEl.checked) loadFlows(Homey, flowSearchEl.value);
       });
       newSelectEl.addEventListener('change', () => {
         updateIdentityWarning();
         maybeLoadCapabilities();
+        if (enableTargetingEl.checked) loadFlows(Homey, flowSearchEl.value);
       });
       repairModeEl.addEventListener('change', () => {
         maybeLoadCapabilities();
@@ -793,9 +901,9 @@
       flowScopeSel.addEventListener('change', () => updateSelectedCount('flowScopeSelect'));
       capabilitySel.addEventListener('change', () => updateSelectedCount('capabilitySelect'));
       document.getElementById('flowSelectAllBtn').addEventListener('click', () => setAllVisibleSelected('flowScopeSelect', true));
-      document.getElementById('flowClearBtn').addEventListener('click', () => setAllVisibleSelected('flowScopeSelect', false));
+      document.getElementById('flowClearBtn').addEventListener('click', () => clearSelection('flowScopeSelect'));
       document.getElementById('capabilitySelectAllBtn').addEventListener('click', () => setAllVisibleSelected('capabilitySelect', true));
-      document.getElementById('capabilityClearBtn').addEventListener('click', () => setAllVisibleSelected('capabilitySelect', false));
+      document.getElementById('capabilityClearBtn').addEventListener('click', () => clearSelection('capabilitySelect'));
       document.getElementById('scanOrphansBtn').addEventListener('click', () => {
         const el = document.getElementById('orphanResults');
         el.textContent = 'Scanning…';
@@ -836,6 +944,7 @@
 
         showApplyConfirmBox();
         appendLog('Awaiting apply confirmation...');
+        setRunFeedback('warn', 'Action required: confirm apply to run irreversible conversion.');
       });
 
       document.getElementById('confirmApplyBtn').addEventListener('click', () => {
@@ -846,6 +955,7 @@
       document.getElementById('cancelApplyBtn').addEventListener('click', () => {
         hideApplyConfirmBox();
         appendLog('Apply canceled by user.');
+        setRunFeedback('info', 'Apply canceled. No changes were made.');
       });
 
       document.getElementById('refreshBtn').addEventListener('click', () => {

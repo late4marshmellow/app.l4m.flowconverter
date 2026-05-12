@@ -49,7 +49,8 @@ function buildDeviceCapabilityMap(devices) {
   return out;
 }
 
-function replaceBrokenDeviceTokens(obj, oldId, newId, deviceCapabilityMap, capabilityFilterSet) {
+function replaceDeviceTokens(obj, oldId, newId, deviceCapabilityMap, capabilityFilterSet, options = {}) {
+  const onlyBrokenVariables = !!options.onlyBrokenVariables;
   const oldIdStr = String(oldId || '').toLowerCase();
   const newIdStr = String(newId || '').toLowerCase();
   if (!oldIdStr || !newIdStr || oldIdStr === newIdStr) {
@@ -80,10 +81,10 @@ function replaceBrokenDeviceTokens(obj, oldId, newId, deviceCapabilityMap, capab
 
         const isBroken = !oldCaps || !oldCaps.has(capabilityId);
         const targetSupportsCapability = !!newCaps && newCaps.has(capabilityId);
-        if (!isBroken) {
+        if (!targetSupportsCapability) {
           return full;
         }
-        if (!targetSupportsCapability) {
+        if (onlyBrokenVariables && !isBroken) {
           return full;
         }
 
@@ -246,8 +247,8 @@ function replaceInFlowCardsSelective(flow, oldId, newId, {
   };
 
   if (flow.trigger && typeof flow.trigger === 'object' && shouldProcess(flow.trigger, 'trigger')) {
-    const r = onlyBrokenVariables
-      ? replaceBrokenDeviceTokens(flow.trigger, oldId, newId, deviceCapabilityMap, capabilityFilterSet)
+    const r = (onlyBrokenVariables || (capabilityFilterSet && capabilityFilterSet.size))
+      ? replaceDeviceTokens(flow.trigger, oldId, newId, deviceCapabilityMap, capabilityFilterSet, { onlyBrokenVariables })
       : deepReplace(flow.trigger, oldId, newId);
     if (r.changed) {
       flow.trigger = r.result;
@@ -271,7 +272,9 @@ function replaceInFlowCardsSelective(flow, oldId, newId, {
         return card;
       }
       const r = onlyBrokenVariables
-        ? replaceBrokenDeviceTokens(card, oldId, newId, deviceCapabilityMap, capabilityFilterSet)
+        ? replaceDeviceTokens(card, oldId, newId, deviceCapabilityMap, capabilityFilterSet, { onlyBrokenVariables })
+        : (capabilityFilterSet && capabilityFilterSet.size)
+          ? replaceDeviceTokens(card, oldId, newId, deviceCapabilityMap, capabilityFilterSet, { onlyBrokenVariables })
         : deepReplace(card, oldId, newId);
       if (r.changed) {
         changed = true;
@@ -305,8 +308,8 @@ function replaceInAdvancedCardsSelective(cards, oldId, newId, {
       continue;
     }
 
-    const r = onlyBrokenVariables
-      ? replaceBrokenDeviceTokens(card, oldId, newId, deviceCapabilityMap, capabilityFilterSet)
+    const r = (onlyBrokenVariables || (capabilityFilterSet && capabilityFilterSet.size))
+      ? replaceDeviceTokens(card, oldId, newId, deviceCapabilityMap, capabilityFilterSet, { onlyBrokenVariables })
       : deepReplace(card, oldId, newId);
     if (r.changed) {
       out[key] = r.result;
@@ -403,6 +406,7 @@ async function runFlowConverter({
     ? providedCapabilityFilters.map(f => String(f).trim()).filter(Boolean)
     : [];
   const capabilityFilterSet = capabilityFilters.length ? new Set(capabilityFilters) : null;
+  const capabilityFiltered = !!(capabilityFilterSet && capabilityFilterSet.size);
   const classMismatchAllowed = !!allowClassMismatch;
   const flowScope = flowIds.length ? new Set(flowIds) : null;
 
@@ -457,7 +461,7 @@ async function runFlowConverter({
     throw new Error(`Class mismatch guard: ${first.oldClass} -> ${first.newClass}. Enable override to continue.`);
   }
 
-  const deviceCapabilityMap = brokenVariablesOnly ? buildDeviceCapabilityMap(allDevices) : new Map();
+  const deviceCapabilityMap = (brokenVariablesOnly || capabilityFiltered) ? buildDeviceCapabilityMap(allDevices) : new Map();
 
   const availabilityMap = unavailableOnly ? await getAvailabilityMap(flowApi) : { supported: false };
   if (unavailableOnly && !availabilityMap.supported) {
@@ -467,6 +471,7 @@ async function runFlowConverter({
   const updatedFlows = [];
   const updatedAdvancedFlows = [];
   const ambiguousFlows = [];
+  const skippedAmbiguousFlows = [];
   let totalVariableTokenReplacements = 0;
   const debugTokenMatches = [];
 
@@ -494,6 +499,11 @@ async function runFlowConverter({
     if (isAmbiguous && allowAmbiguousMerge) {
       ambiguousFlows.push({ id: f.id, name: f.name || f.id, type: 'flow' });
       console.warn('[flowconverter] ambiguous flow', f.id, '- contains both source and target IDs');
+    }
+    if (isAmbiguous && !allowAmbiguousMerge) {
+      skippedAmbiguousFlows.push({ id: f.id, name: f.name || f.id, type: 'flow' });
+      console.warn('[flowconverter] skipped ambiguous flow', f.id, '- both source and target IDs already present');
+      continue;
     }
 
     let updatedFlow = JSON.parse(JSON.stringify(f));
@@ -536,7 +546,7 @@ async function runFlowConverter({
     for (let i = 0; i < oldIds.length; i++) {
       const oldId = oldIds[i];
       const newId = newIds[i] || newIds[0];
-      const selectiveMode = unavailableOnly || brokenVariablesOnly;
+      const selectiveMode = unavailableOnly || brokenVariablesOnly || capabilityFiltered;
       const { result, changed, replacements, variableTokenReplacements } = selectiveMode
         ? replaceInFlowCardsSelective(updatedFlow, oldId, newId, {
           onlyUnavailableCards: unavailableOnly,
@@ -601,6 +611,11 @@ async function runFlowConverter({
       ambiguousFlows.push({ id: af.id, name: af.name || af.id, type: 'advanced' });
       console.warn('[flowconverter] ambiguous advanced flow', af.id, '- contains both source and target IDs');
     }
+    if (isAmbiguous && !allowAmbiguousMerge) {
+      skippedAmbiguousFlows.push({ id: af.id, name: af.name || af.id, type: 'advanced' });
+      console.warn('[flowconverter] skipped ambiguous advanced flow', af.id, '- both source and target IDs already present');
+      continue;
+    }
 
     const updated = JSON.parse(JSON.stringify(af));
     let afChanged = false;
@@ -642,7 +657,7 @@ async function runFlowConverter({
     for (let i = 0; i < oldIds.length; i++) {
       const oldId = oldIds[i];
       const newId = newIds[i] || newIds[0];
-      const selectiveMode = unavailableOnly || brokenVariablesOnly;
+      const selectiveMode = unavailableOnly || brokenVariablesOnly || capabilityFiltered;
       const { result, changed, replacements, variableTokenReplacements } = selectiveMode
         ? replaceInAdvancedCardsSelective(updated.cards, oldId, newId, {
           onlyUnavailableCards: unavailableOnly,
@@ -697,6 +712,7 @@ async function runFlowConverter({
     allowClassMismatch: classMismatchAllowed,
     allowAmbiguousMerge: !!allowAmbiguousMerge,
     ambiguousFlows,
+    skippedAmbiguousFlows,
     updatedFlows,
     updatedAdvancedFlows,
     totalUpdated: updatedFlows.length + updatedAdvancedFlows.length,
