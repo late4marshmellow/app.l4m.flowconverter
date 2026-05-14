@@ -7,7 +7,7 @@
   "description": {
     "en": "Fixes broken flow references after re-pairing or replacing Homey devices."
   },
-  "version": "1.0.0",
+  "version": "1.0.1",
   "sdk": 3,
   "platforms": [
     "local"

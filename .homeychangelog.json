@@ -1,5 +1,8 @@
 {
   "1.0.0": {
     "en": "First release"
+  },
+  "1.0.1": {
+    "en": "Security Audit with AI - to avoid API key leak"
   }
 }
