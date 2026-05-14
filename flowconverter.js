@@ -2,6 +2,20 @@
 
 // Replaces device references in flows and advanced flows.
 
+function redactSecrets(value) {
+  const text = String(value || '');
+  return text
+    .replace(/(authorization\s*[:=]\s*bearer\s+)[^\s,;]+/ig, '$1[REDACTED]')
+    .replace(/(bearer\s+)[A-Za-z0-9._~+\/-]+=*/g, '$1[REDACTED]')
+    .replace(/(personal_api_token\s*[:=]\s*)[^\s,;]+/ig, '$1[REDACTED]')
+    .replace(/([?&](?:token|api[_-]?key|authorization)=)[^&\s]+/ig, '$1[REDACTED]');
+}
+
+function safeErrorMessage(err) {
+  const raw = err && err.message ? err.message : String(err || 'Unknown error');
+  return redactSecrets(raw);
+}
+
 function deepReplace(obj, oldId, newId) {
   let changed = false;
   let replacements = 0;
@@ -580,7 +594,7 @@ async function runFlowConverter({
           await flowApi.updateFlow({ id: f.id, flow: partial });
           console.log('[flowconverter] updated flow', f.id);
         } catch (e) {
-          console.error('[flowconverter] FAILED to update flow', f.id, e && e.message ? e.message : e);
+          console.error('[flowconverter] FAILED to update flow', f.id, safeErrorMessage(e));
         }
       }
     }
@@ -689,7 +703,7 @@ async function runFlowConverter({
           await flowApi.updateAdvancedFlow({ id: af.id, advancedflow: updated });
           console.log('[flowconverter] updated advanced flow', af.id);
         } catch (e) {
-          console.error('[flowconverter] FAILED to update advanced flow', af.id, e && e.message ? e.message : e);
+          console.error('[flowconverter] FAILED to update advanced flow', af.id, safeErrorMessage(e));
         }
       }
     }

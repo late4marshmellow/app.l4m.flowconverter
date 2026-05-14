@@ -252,6 +252,15 @@
       el.scrollTop = el.scrollHeight;
     }
 
+    function sanitizeErrorText(value) {
+      const text = String(value || '');
+      return text
+        .replace(/(authorization\s*[:=]\s*bearer\s+)[^\s,;]+/ig, '$1[REDACTED]')
+        .replace(/(bearer\s+)[A-Za-z0-9._~+\/-]+=*/g, '$1[REDACTED]')
+        .replace(/(personal_api_token\s*[:=]\s*)[^\s,;]+/ig, '$1[REDACTED]')
+        .replace(/([?&](?:token|api[_-]?key|authorization)=)[^&\s]+/ig, '$1[REDACTED]');
+    }
+
     function setRunFeedback(tone, message) {
       const el = document.getElementById('runFeedback');
       if (!el) return;
@@ -545,7 +554,7 @@
       Homey.api('GET', path, null, function(err, res) {
         pendingFlowLoads -= 1;
         if (err) {
-          appendLog('Error fetching flows: ' + (err.message || err));
+          appendLog('Error fetching flows: ' + sanitizeErrorText(err && err.message ? err.message : err));
           return;
         }
         const items = (res || []).map(f => ({ id: f.id, label: `[${f.type}] ${f.name} (${f.id})` }));
@@ -569,7 +578,7 @@
       Homey.api('GET', '/capability-list/?' + qs.slice(1), null, function(err, res) {
         pendingCapabilityLoads -= 1;
         if (err) {
-          appendLog('Error fetching capabilities: ' + (err.message || err));
+          appendLog('Error fetching capabilities: ' + sanitizeErrorText(err && err.message ? err.message : err));
           return;
         }
         const items = (res || []).map(c => ({ id: c.id, label: c.name || c.id }));
@@ -578,7 +587,7 @@
         if (!items.length) {
           Homey.api('GET', '/capability-debug/?' + qs.slice(1), null, function(debugErr, debugRes) {
             if (debugErr) {
-              appendLog('Capability debug failed: ' + (debugErr.message || debugErr));
+              appendLog('Capability debug failed: ' + sanitizeErrorText(debugErr && debugErr.message ? debugErr.message : debugErr));
               return;
             }
             if (!debugRes || debugRes.ok === false) {
@@ -624,7 +633,7 @@
         }
         const path = '/devices' + (q ? `?q=${encodeURIComponent(q)}` : '/');
         Homey.api('GET', path, null, function(err, res) {
-          if (err) { appendLog('Error fetching devices: ' + (err.message||err)); pendingDeviceLoads -= 1; return; }
+          if (err) { appendLog('Error fetching devices: ' + sanitizeErrorText(err && err.message ? err.message : err)); pendingDeviceLoads -= 1; return; }
           if (Array.isArray(res)) {
             res.forEach(d => {
               if (d && d.id) knownDeviceIds.add(normalizeId(d.id));
@@ -653,7 +662,7 @@
           }
           refreshValidation(Homey);
         });
-      } catch (err) { appendLog('Load devices failed: ' + err.message); pendingDeviceLoads -= 1; }
+      } catch (err) { appendLog('Load devices failed: ' + sanitizeErrorText(err && err.message ? err.message : err)); pendingDeviceLoads -= 1; }
     }
 
     function run(Homey, soft) {
@@ -687,8 +696,9 @@
         softRun: !!soft,
       }, function(err, res) {
         if (err) {
-          appendLog('Run error: ' + (err.message||JSON.stringify(err)));
-          setRunFeedback('error', 'Conversion failed: ' + (err.message || 'unknown error'));
+          const safeErr = sanitizeErrorText(err && err.message ? err.message : JSON.stringify(err));
+          appendLog('Run error: ' + safeErr);
+          setRunFeedback('error', 'Conversion failed: ' + (safeErr || 'unknown error'));
           return;
         }
         if (typeof res === 'string') {
@@ -795,15 +805,23 @@
 
       Homey.get('personal_api_token', (err, val) => {
         const hasToken = !!val;
-        if (val) { tokenInput.value = val; tokenStatus.textContent = '✓ Token saved'; }
+        tokenInput.value = '';
+        if (hasToken) {
+          tokenStatus.textContent = '✓ Token saved';
+        }
         updateAppVisibility(hasToken);
       });
       document.getElementById('saveTokenBtn').addEventListener('click', () => {
         const t = tokenInput.value.trim();
         if (!t) { tokenStatus.textContent = '⚠ Token is empty'; return; }
         Homey.set('personal_api_token', t, (err) => {
-          tokenStatus.textContent = err ? ('Error: ' + err) : '✓ Saved — takes effect immediately';
-          if (!err) updateAppVisibility(true);
+          tokenStatus.textContent = err
+            ? ('Error: ' + sanitizeErrorText(err && err.message ? err.message : err))
+            : '✓ Saved — takes effect immediately';
+          if (!err) {
+            tokenInput.value = '';
+            updateAppVisibility(true);
+          }
         });
       });
       document.getElementById('clearTokenBtn').addEventListener('click', () => {
@@ -908,19 +926,67 @@
         const el = document.getElementById('orphanResults');
         el.textContent = 'Scanning…';
         Homey.api('GET', '/orphaned-devices/', null, function(err, res) {
-          if (err) { el.textContent = 'Error: ' + (err.message || err); return; }
+          if (err) {
+            el.textContent = 'Error: ' + sanitizeErrorText(err && err.message ? err.message : err);
+            return;
+          }
           if (!res || res.length === 0) { el.textContent = '✓ No orphaned device references found.'; return; }
-          let html = '<table style="width:100%;border-collapse:collapse;margin-top:4px">'
-            + '<tr style="font-weight:600;border-bottom:1px solid #d7e6dd"><td style="padding:4px">UUID</td><td style="padding:4px">Referenced in</td><td style="padding:4px"></td></tr>';
-          res.forEach(function(o) {
-            html += '<tr style="border-bottom:1px solid #eef4f0">'
-              + '<td style="padding:4px;font-family:monospace;font-size:11px">' + o.id + '</td>'
-              + '<td style="padding:4px;font-size:11px;color:#777">' + o.flows.join(', ') + '</td>'
-              + '<td style="padding:4px"><button class="secondary" style="font-size:11px;padding:4px 8px" onclick="(function(){var el=document.getElementById(\'oldDeviceSearch\');el.value=\'' + o.id + '\';el.dispatchEvent(new Event(\'input\'));el.focus();})();">Use as old ID</button></td>'
-              + '</tr>';
+          const table = document.createElement('table');
+          table.style.width = '100%';
+          table.style.borderCollapse = 'collapse';
+          table.style.marginTop = '4px';
+
+          const headRow = document.createElement('tr');
+          headRow.style.fontWeight = '600';
+          headRow.style.borderBottom = '1px solid #d7e6dd';
+          ['UUID', 'Referenced in', ''].forEach(function(label) {
+            const th = document.createElement('td');
+            th.style.padding = '4px';
+            th.textContent = label;
+            headRow.appendChild(th);
           });
-          html += '</table>';
-          el.innerHTML = html;
+          table.appendChild(headRow);
+
+          res.forEach(function(o) {
+            const row = document.createElement('tr');
+            row.style.borderBottom = '1px solid #eef4f0';
+
+            const idCell = document.createElement('td');
+            idCell.style.padding = '4px';
+            idCell.style.fontFamily = 'monospace';
+            idCell.style.fontSize = '11px';
+            idCell.textContent = String(o && o.id ? o.id : '');
+
+            const flowCell = document.createElement('td');
+            flowCell.style.padding = '4px';
+            flowCell.style.fontSize = '11px';
+            flowCell.style.color = '#777';
+            flowCell.textContent = Array.isArray(o && o.flows) ? o.flows.join(', ') : '';
+
+            const actionCell = document.createElement('td');
+            actionCell.style.padding = '4px';
+
+            const btn = document.createElement('button');
+            btn.className = 'secondary';
+            btn.style.fontSize = '11px';
+            btn.style.padding = '4px 8px';
+            btn.textContent = 'Use as old ID';
+            btn.addEventListener('click', function() {
+              const input = document.getElementById('oldDeviceSearch');
+              input.value = String(o && o.id ? o.id : '');
+              input.dispatchEvent(new Event('input'));
+              input.focus();
+            });
+
+            actionCell.appendChild(btn);
+            row.appendChild(idCell);
+            row.appendChild(flowCell);
+            row.appendChild(actionCell);
+            table.appendChild(row);
+          });
+
+          el.innerHTML = '';
+          el.appendChild(table);
         });
       });
 

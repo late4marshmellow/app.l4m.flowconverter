@@ -3,6 +3,20 @@
 // Allow app to inject its instance for reliable access.
 let __APP_INSTANCE = null;
 
+function redactSecrets(value) {
+  const text = String(value || '');
+  return text
+    .replace(/(authorization\s*[:=]\s*bearer\s+)[^\s,;]+/ig, '$1[REDACTED]')
+    .replace(/(bearer\s+)[A-Za-z0-9._~+\/-]+=*/g, '$1[REDACTED]')
+    .replace(/(personal_api_token\s*[:=]\s*)[^\s,;]+/ig, '$1[REDACTED]')
+    .replace(/([?&](?:token|api[_-]?key|authorization)=)[^&\s]+/ig, '$1[REDACTED]');
+}
+
+function safeErrorMessage(err) {
+  const raw = err && err.message ? err.message : String(err || 'Unknown error');
+  return redactSecrets(raw);
+}
+
 function getHomeyApi() {
   if (!__APP_INSTANCE) {
     throw new Error('App instance not initialized');
@@ -94,7 +108,7 @@ module.exports = {
 
       return devices.slice(0, limit).map(d => ({ id: d.id, name: d.name }));
     } catch (err) {
-      throw new Error(`Failed to fetch devices: ${  err && err.message ? err.message : String(err)}`);
+      throw new Error(`Failed to fetch devices: ${safeErrorMessage(err)}`);
     }
   },
 
@@ -140,7 +154,7 @@ module.exports = {
       orphaned.sort((a, b) => a.id.localeCompare(b.id));
       return orphaned;
     } catch (err) {
-      throw new Error(`getOrphanedDevices failed: ${  err && err.message ? err.message : String(err)}`);
+      throw new Error(`getOrphanedDevices failed: ${safeErrorMessage(err)}`);
     }
   },
 
@@ -177,7 +191,7 @@ module.exports = {
       flows.sort((a, b) => a.name.localeCompare(b.name));
       return flows.slice(0, limit).map(f => ({ id: f.id, name: f.name, type: f.type }));
     } catch (err) {
-      throw new Error(`Failed to fetch flows: ${  err && err.message ? err.message : String(err)}`);
+      throw new Error(`Failed to fetch flows: ${safeErrorMessage(err)}`);
     }
   },
 
@@ -236,7 +250,7 @@ module.exports = {
       }
       return capabilities.slice(0, limit).map(capability => ({ id: capability, name: capability }));
     } catch (err) {
-      throw new Error(`Failed to fetch convertible capabilities: ${  err && err.message ? err.message : String(err)}`);
+      throw new Error(`Failed to fetch convertible capabilities: ${safeErrorMessage(err)}`);
     }
   },
 
@@ -309,7 +323,7 @@ module.exports = {
       return {
         ok: false,
         reason: 'exception',
-        message: err && err.message ? err.message : String(err),
+        message: safeErrorMessage(err),
       };
     }
   },
@@ -349,7 +363,7 @@ module.exports = {
       });
       return result;
     } catch (err) {
-      throw new Error(`Converter failed: ${  err && err.message ? err.message : String(err)}`);
+      throw new Error(`Converter failed: ${safeErrorMessage(err)}`);
     }
   },
 };
