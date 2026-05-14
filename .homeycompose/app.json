@@ -4,7 +4,7 @@
     "en": "Flow Converter"
   },
   "description": {
-    "en": "Update device references in flows and variables"
+    "en": "Fixes broken flow references after re-pairing or replacing Homey devices."
   },
   "version": "1.0.0",
   "sdk": 3,

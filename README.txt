@@ -1,0 +1,3 @@
+Flow Converter makes it easy to keep your Homey automations intact after replacing or re-pairing a device. Instead of manually hunting through dozens of flows to fix broken references, you can swap out the old device ID with the new one in a single run. Everything is done from the app settings page.
+
+Before applying any changes, a soft run lets you preview exactly what will be updated. Whether you are repairing a freshly replaced sensor, cleaning up flows left over from a deleted device, or fixing broken variable tokens, Flow Converter gives you the control to do it safely and confidently.
