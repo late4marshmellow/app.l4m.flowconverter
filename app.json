@@ -5,7 +5,7 @@
     "en": "Flow Converter"
   },
   "description": {
-    "en": "Convert and update device references in Homey flows and advanced flows."
+    "en": "Fixes broken flow references after re-pairing or replacing Homey devices."
   },
   "version": "1.0.0",
   "sdk": 3,
@@ -29,6 +29,11 @@
   "main": "app.js",
   "compatibility": ">=5.0.0",
   "icon": "assets/icon.svg",
+  "images": {
+    "small": "assets/images/small.png",
+    "large": "assets/images/large.png",
+    "xlarge": "assets/images/xlarge.png"
+  },
   "api": {
     "getDevices": {
       "method": "GET",
@@ -66,5 +71,27 @@
       "method": "GET",
       "path": "/capability-debug"
     }
+  },
+  "brandColor": "#2f2f2f",
+  "tags": {
+    "en": [
+      "flow",
+      "convert",
+      "migrate",
+      "tools",
+      "utility",
+      "unknow",
+      "card",
+      "update",
+      "device",
+      "replace",
+      "change"
+    ]
+  },
+  "source": "https://github.com/late4marshmellow/app.l4m.flowconverter",
+  "homepage": "https://github.com/late4marshmellow/app.l4m.flowconverter",
+  "support": "mailto:late4marshmellow@tuta.io",
+  "bugs": {
+    "url": "https://github.com/late4marshmellow/app.l4m.flowconverter/issues"
   }
 }
