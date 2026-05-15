@@ -12,6 +12,9 @@
   "platforms": [
     "local"
   ],
+  "platformLocalRequiredFeatures": [
+    "matter"
+  ],
   "author": "late4marshmellow",
   "contributors": {
     "developers": [
