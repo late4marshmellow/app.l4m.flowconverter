@@ -2,6 +2,13 @@
 
 const Homey = require('homey');
 const { HomeyAPIApp } = require('homey-api');
+const crypto = require('crypto');
+
+// AES-256-GCM settings key names.
+const ALGO        = 'aes-256-gcm';
+const KEY_SETTING = '_tok_key';  // hex-encoded 32-byte AES key
+const ENC_SETTING = '_tok_enc';  // JSON { iv, ct, tag } (all base64)
+const ACT_SETTING = 'personal_api_token_active'; // boolean flag for UI
 
 function redactSecrets(value) {
   const text = String(value || '');
@@ -21,10 +28,12 @@ class FlowConverterApp extends Homey.App {
   async onInit() {
     this.log('FlowConverterApp is running');
 
+    this._handlingTokenEncryption = false;  // re-entry guard for settings listeners
+
     try {
       this.homeyApi = new HomeyAPIApp({ homey: this.homey });
       this.log('homeyApi created');
-      await this._applyPersonalToken();
+      await this._migrateOrApplyToken();
     } catch (err) {
       this.error(`Failed to create homeyApi: ${safeErrorMessage(err)}`);
     }
@@ -39,37 +48,142 @@ class FlowConverterApp extends Homey.App {
       this.error(`Failed to set app on api module: ${safeErrorMessage(e)}`);
     }
 
-    // Hot-reload personal token when user saves it in settings (no app restart needed).
+    // Encrypt and apply when a new plain token arrives from the settings page.
     this.homey.settings.on('set', (key) => {
-      if (key === 'personal_api_token') {
-        this.log('personal_api_token changed — reapplying');
-        this._applyPersonalToken().catch(err => this.error(`_applyPersonalToken failed: ${safeErrorMessage(err)}`));
+      if (key === 'personal_api_token' && !this._handlingTokenEncryption) {
+        this.log('personal_api_token set — encrypting and applying');
+        this._encryptAndApplyToken().catch(err =>
+          this.error(`_encryptAndApplyToken failed: ${safeErrorMessage(err)}`)
+        );
+      }
+    });
+
+    // Clear all token material when the settings page unsets the plain token key.
+    this.homey.settings.on('unset', (key) => {
+      if (key === 'personal_api_token' && !this._handlingTokenEncryption) {
+        this.log('personal_api_token unset — clearing token material');
+        this._clearTokenMaterial().catch(err =>
+          this.error(`_clearTokenMaterial failed: ${safeErrorMessage(err)}`)
+        );
       }
     });
   }
 
-  // Injects personal token to homeyApi so flow writes are authorized.
-  async _applyPersonalToken() {
-    if (!this.homeyApi) {
+  // On startup: migrate legacy plain token if needed, otherwise validate encrypted token exists.
+  async _migrateOrApplyToken() {
+    const plain = await this.homey.settings.get('personal_api_token');
+    const enc   = await this.homey.settings.get(ENC_SETTING);
+    if (plain && !enc) {
+      this.log('Migrating legacy plain token to encrypted storage');
+      await this._encryptAndApplyToken();
+    } else if (enc) {
+      this.log('Encrypted token found on startup — ready for on-demand decryption');
+    }
+  }
+
+  // Generate or retrieve the 32-byte AES key, persisting it if new.
+  async _getOrCreateEncKey() {
+    let keyHex = await this.homey.settings.get(KEY_SETTING);
+    if (!keyHex || typeof keyHex !== 'string' || keyHex.length !== 64) {
+      keyHex = crypto.randomBytes(32).toString('hex');
+      await this.homey.settings.set(KEY_SETTING, keyHex);
+      this.log('New AES-256 encryption key generated');
+    }
+    return Buffer.from(keyHex, 'hex');
+  }
+
+  // Encrypt plainToken with AES-256-GCM. Returns a JSON string envelope.
+  _encryptToken(keyBuf, plainToken) {
+    const iv     = crypto.randomBytes(16);
+    const cipher = crypto.createCipheriv(ALGO, keyBuf, iv);
+    const ct     = Buffer.concat([cipher.update(plainToken, 'utf8'), cipher.final()]);
+    const tag    = cipher.getAuthTag();
+    return JSON.stringify({
+      iv:  iv.toString('base64'),
+      ct:  ct.toString('base64'),
+      tag: tag.toString('base64'),
+    });
+  }
+
+  // Decrypt an AES-256-GCM JSON envelope. Throws if auth tag is invalid (tamper detected).
+  _decryptToken(keyBuf, encJson) {
+    const { iv, ct, tag } = JSON.parse(encJson);
+    const decipher = crypto.createDecipheriv(ALGO, keyBuf, Buffer.from(iv, 'base64'));
+    decipher.setAuthTag(Buffer.from(tag, 'base64'));
+    return Buffer.concat([
+      decipher.update(Buffer.from(ct, 'base64')),
+      decipher.final(),
+    ]).toString('utf8');
+  }
+
+  // Load key, decrypt token, zero the key buffer, and return the plaintext.
+  // Key is never persisted in memory between calls.
+  async _loadAndDecryptToken() {
+    const encJson = await this.homey.settings.get(ENC_SETTING);
+    if (!encJson) {
+      throw new Error('No encrypted token found in settings');
+    }
+    const keyBuf = await this._getOrCreateEncKey();
+    try {
+      return this._decryptToken(keyBuf, encJson);
+    } finally {
+      keyBuf.fill(0);
+    }
+  }
+
+  // Execute a callback with the decrypted token available on homeyApi.__token.
+  // Token is set only for the duration of the callback, then cleared and keyed buffer zeroed.
+  async _withDecryptedToken(callback) {
+    const plainToken = await this._loadAndDecryptToken();
+    try {
+      this.homeyApi.__token = plainToken;
+      return await callback();
+    } finally {
+      this.homeyApi.__token = undefined;
+      // Zero the string is impossible (immutable), but clearing the reference helps.
+    }
+  }
+
+  // Read the plain token written by the settings page, encrypt it, persist the
+  // ciphertext, and remove the plain value so it never stays on disk.
+  async _encryptAndApplyToken() {
+    const plainToken = await this.homey.settings.get('personal_api_token');
+    if (!plainToken) {
+      await this._clearTokenMaterial();
       return;
     }
     try {
-      const token = await this.homey.settings.get('personal_api_token');
-      if (token) {
-        // Trigger baseUrl discovery before injecting token.
-        if (!this.homeyApi.__baseUrl) {
-          try {
-            await this.homeyApi.flow.getFlows();
-          } catch (e) {}
+      const keyBuf = await this._getOrCreateEncKey();
+      try {
+        const encJson = this._encryptToken(keyBuf, plainToken);
+        await this.homey.settings.set(ENC_SETTING, encJson);
+        await this.homey.settings.set(ACT_SETTING, true);
+
+        // Remove the plain token. Guard prevents the unset listener from re-entering.
+        this._handlingTokenEncryption = true;
+        try {
+          await this.homey.settings.unset('personal_api_token');
+        } finally {
+          this._handlingTokenEncryption = false;
         }
-        this.homeyApi.__token = token;
-        this.log('Personal API token applied to homeyApi');
-      } else {
-        this.log('No personal API token set — flow writes will fail with Missing Scopes');
+
+        this.log('Token encrypted; plain value removed from settings');
+      } finally {
+        keyBuf.fill(0);
       }
     } catch (err) {
-      this.error(`_applyPersonalToken failed: ${safeErrorMessage(err)}`);
+      this.error(`Token encryption failed: ${safeErrorMessage(err)}`);
     }
+  }
+
+  // Clear all token material from settings and homeyApi.
+  async _clearTokenMaterial() {
+    await this.homey.settings.unset(ENC_SETTING);
+    await this.homey.settings.unset(ACT_SETTING);
+    if (this.homeyApi) {
+      this.homeyApi.__token = undefined;
+    }
+    this.log('Token material cleared');
   }
 }
 

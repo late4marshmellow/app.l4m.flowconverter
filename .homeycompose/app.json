@@ -89,6 +89,13 @@
   },
   "source": "https://github.com/late4marshmellow/app.l4m.flowconverter",
   "homepage": "https://github.com/late4marshmellow/app.l4m.flowconverter",
+  "contributing": {
+    "donate": {
+      "paypal": {
+        "username": "alejandronu"
+      }
+    }
+  },
   "support": "mailto:late4marshmellow@tuta.io",
   "bugs": {
     "url": "https://github.com/late4marshmellow/app.l4m.flowconverter/issues"

@@ -24,6 +24,7 @@
     .warn{margin-top:8px;padding:8px 10px;border-radius:6px;font-size:12px;display:none}
     .warn.error{background:#fdebec;border:1px solid #efc5c7;color:#7f1d1d}
     .warn.info{background:#fff6db;border:1px solid #f0df9f;color:#6a5500}
+    .token-saved-input{color:#1f7a3d !important;font-weight:700;background:#ecf9f1;border-color:#97d3ae}
     .confirm-box{margin-top:10px;padding:10px;border-radius:8px;background:#fff2f2;border:1px solid #efc5c7;color:#6f1d1d;display:none}
     .confirm-box .title{font-weight:600;margin-bottom:6px}
     .confirm-actions{display:flex;gap:8px;margin-top:8px}
@@ -76,13 +77,12 @@
         &nbsp;&nbsp;&nbsp;• <b>Flows</b> — needed to read and update your flows<br>
         &nbsp;&nbsp;&nbsp;• <b>Devices</b> — needed to list devices for the search<br>
         5. Click <b>Create</b>, then copy the key (it's only shown once)<br>
-        6. Paste it below and click <b>Save token</b>
+        6. Paste it below and click <b>Save and encrypt token</b>
       </p>
       <input id="personalToken" type="password" placeholder="Paste your API key here" style="margin-bottom:6px" />
       <div class="row" style="margin-top:6px">
-        <button id="saveTokenBtn" class="primary">Save token</button>
+        <button id="saveTokenBtn" class="primary">Save and encrypt token</button>
         <button id="clearTokenBtn" class="secondary">Clear token</button>
-        <span id="tokenStatus" style="align-self:center;font-size:13px;color:#547365"></span>
       </div>
       <div id="apiHint" class="warn info" style="margin-top:10px;display:none">
         Save an API key first. The converter controls below appear only after a token is present.
@@ -790,7 +790,8 @@
 
       // --- Personal token handling ---
       const tokenInput = document.getElementById('personalToken');
-      const tokenStatus = document.getElementById('tokenStatus');
+      const saveTokenBtn = document.getElementById('saveTokenBtn');
+      const clearTokenBtn = document.getElementById('clearTokenBtn');
       const apiBox = document.getElementById('apiBox');
       const apiHint = document.getElementById('apiHint');
       const appContent = document.getElementById('appContent');
@@ -803,31 +804,46 @@
         }
       }
 
-      Homey.get('personal_api_token', (err, val) => {
-        const hasToken = !!val;
-        tokenInput.value = '';
+      function setTokenUiState(hasToken) {
         if (hasToken) {
-          tokenStatus.textContent = '✓ Token saved';
+          tokenInput.type = 'text';
+          tokenInput.value = 'Token is saved and encrypted';
+          tokenInput.disabled = true;
+          tokenInput.classList.add('token-saved-input');
+          saveTokenBtn.style.display = 'none';
+          clearTokenBtn.style.display = 'inline-block';
+        } else {
+          tokenInput.type = 'password';
+          tokenInput.value = '';
+          tokenInput.placeholder = 'Paste your API key here';
+          tokenInput.disabled = false;
+          tokenInput.classList.remove('token-saved-input');
+          saveTokenBtn.style.display = 'inline-block';
+          clearTokenBtn.style.display = 'none';
         }
+      }
+
+      Homey.get('personal_api_token_active', (err, val) => {
+        const hasToken = !!val;
+        setTokenUiState(hasToken);
         updateAppVisibility(hasToken);
       });
-      document.getElementById('saveTokenBtn').addEventListener('click', () => {
+      saveTokenBtn.addEventListener('click', () => {
         const t = tokenInput.value.trim();
-        if (!t) { tokenStatus.textContent = '⚠ Token is empty'; return; }
+        if (!t) { return; }
         Homey.set('personal_api_token', t, (err) => {
-          tokenStatus.textContent = err
-            ? ('Error: ' + sanitizeErrorText(err && err.message ? err.message : err))
-            : '✓ Saved — takes effect immediately';
-          if (!err) {
+          if (err) {
             tokenInput.value = '';
+            tokenInput.placeholder = 'Could not save token. Please try again.';
+          } else {
+            setTokenUiState(true);
             updateAppVisibility(true);
           }
         });
       });
-      document.getElementById('clearTokenBtn').addEventListener('click', () => {
+      clearTokenBtn.addEventListener('click', () => {
         Homey.unset('personal_api_token', () => {
-          tokenInput.value = '';
-          tokenStatus.textContent = 'Token cleared';
+          setTokenUiState(false);
           updateAppVisibility(false);
         });
       });
