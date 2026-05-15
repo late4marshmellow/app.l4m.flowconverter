@@ -36,39 +36,48 @@
   "api": {
     "getDevices": {
       "method": "GET",
-      "path": "/devices/"
+      "path": "/devices/",
+      "role": "owner"
     },
     "runConverter": {
       "method": "POST",
-      "path": "/run/"
+      "path": "/run/",
+      "role": "owner"
     },
     "getOrphanedDevices": {
       "method": "GET",
-      "path": "/orphaned-devices/"
+      "path": "/orphaned-devices/",
+      "role": "owner"
     },
     "getFlowList": {
       "method": "GET",
-      "path": "/flow-list/"
+      "path": "/flow-list/",
+      "role": "owner"
     },
     "getFlowListNoSlash": {
       "method": "GET",
-      "path": "/flow-list"
+      "path": "/flow-list",
+      "role": "owner"
     },
     "getCapabilityList": {
       "method": "GET",
-      "path": "/capability-list/"
+      "path": "/capability-list/",
+      "role": "owner"
     },
     "getCapabilityListNoSlash": {
       "method": "GET",
-      "path": "/capability-list"
+      "path": "/capability-list",
+      "role": "owner"
     },
     "getCapabilityDebug": {
       "method": "GET",
-      "path": "/capability-debug/"
+      "path": "/capability-debug/",
+      "role": "owner"
     },
     "getCapabilityDebugNoSlash": {
       "method": "GET",
-      "path": "/capability-debug"
+      "path": "/capability-debug",
+      "role": "owner"
     }
   },
   "brandColor": "#2f2f2f",

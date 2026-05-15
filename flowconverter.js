@@ -19,7 +19,12 @@ function safeErrorMessage(err) {
 function deepReplace(obj, oldId, newId) {
   let changed = false;
   let replacements = 0;
+  const visited = new WeakSet();
   function walk(value) {
+    if (value !== null && typeof value === 'object') {
+      if (visited.has(value)) return value;
+      visited.add(value);
+    }
     if (typeof value === 'string') {
       if (value.includes(oldId)) {
         const count = value.split(oldId).length - 1;
@@ -77,8 +82,13 @@ function replaceDeviceTokens(obj, oldId, newId, deviceCapabilityMap, capabilityF
 
   let changed = false;
   let replacements = 0;
+  const visited = new WeakSet();
 
   function walk(value) {
+    if (value !== null && typeof value === 'object') {
+      if (visited.has(value)) return value;
+      visited.add(value);
+    }
     if (typeof value === 'string') {
       tokenRegex.lastIndex = 0;
       let localChanges = 0;
@@ -137,10 +147,15 @@ function collectDeviceTokens(obj, options = {}) {
   const tokenRegex = /homey:device:([0-9a-f-]{36})\|([a-z0-9_.\-]+)/gi;
   const matches = [];
   const maxMatches = typeof options.maxMatches === 'number' ? options.maxMatches : 100;
+  const visited = new WeakSet();
 
   function walk(value, path) {
     if (matches.length >= maxMatches) {
       return;
+    }
+    if (value !== null && typeof value === 'object') {
+      if (visited.has(value)) return;
+      visited.add(value);
     }
     if (typeof value === 'string') {
       tokenRegex.lastIndex = 0;
@@ -342,10 +357,15 @@ function hasIdReference(obj, id) {
   }
   const needle = String(id);
   let found = false;
+  const visited = new WeakSet();
 
   function walk(value) {
     if (found) {
       return;
+    }
+    if (value !== null && typeof value === 'object') {
+      if (visited.has(value)) return;
+      visited.add(value);
     }
     if (typeof value === 'string') {
       if (value.includes(needle)) {

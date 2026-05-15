@@ -31,8 +31,8 @@ class FlowConverterApp extends Homey.App {
     this._handlingTokenEncryption = false;  // re-entry guard for settings listeners
 
     try {
-      this.homeyApi = new HomeyAPIApp({ homey: this.homey });
-      this.log('homeyApi created');
+      // We don't initialize a global HomeyAPIApp anymore to avoid state leakage.
+      this.log('App init finished without global HomeyAPIApp');
       await this._migrateOrApplyToken();
     } catch (err) {
       this.error(`Failed to create homeyApi: ${safeErrorMessage(err)}`);
@@ -131,17 +131,11 @@ class FlowConverterApp extends Homey.App {
     }
   }
 
-  // Execute a callback with the decrypted token available on homeyApi.__token.
-  // Token is set only for the duration of the callback, then cleared and keyed buffer zeroed.
+  // Execute a callback with the decrypted plaintoken.
+  // Token is never persisted to any global API instances.
   async _withDecryptedToken(callback) {
     const plainToken = await this._loadAndDecryptToken();
-    try {
-      this.homeyApi.__token = plainToken;
-      return await callback();
-    } finally {
-      this.homeyApi.__token = undefined;
-      // Zero the string is impossible (immutable), but clearing the reference helps.
-    }
+    return await callback(plainToken);
   }
 
   // Read the plain token written by the settings page, encrypt it, persist the
@@ -176,13 +170,10 @@ class FlowConverterApp extends Homey.App {
     }
   }
 
-  // Clear all token material from settings and homeyApi.
+  // Clear all token material from settings.
   async _clearTokenMaterial() {
     await this.homey.settings.unset(ENC_SETTING);
     await this.homey.settings.unset(ACT_SETTING);
-    if (this.homeyApi) {
-      this.homeyApi.__token = undefined;
-    }
     this.log('Token material cleared');
   }
 }

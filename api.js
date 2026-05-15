@@ -28,20 +28,27 @@ function getHomeyApi() {
   if (!__APP_INSTANCE) {
     throw new Error('App instance not initialized');
   }
-  if (!__APP_INSTANCE.homeyApi) {
-    throw new Error('homeyApi not available — personal API token may not be configured');
-  }
-  return __APP_INSTANCE.homeyApi;
+  const { HomeyAPIApp } = require('homey-api');
+  return new HomeyAPIApp({ homey: __APP_INSTANCE.homey });
 }
 
 // Wrap a callback to load/decrypt the token for the duration of homeyApi calls.
 async function withToken(callback) {
   const app = getApp();
   if (app._withDecryptedToken) {
-    return await app._withDecryptedToken(callback);
+    return await app._withDecryptedToken(async (plainToken) => {
+      const { HomeyAPIApp } = require('homey-api');
+      const tempApi = new HomeyAPIApp({ homey: app.homey });
+      tempApi.__token = plainToken;
+      try {
+        return await callback(tempApi);
+      } finally {
+        tempApi.__token = undefined;
+      }
+    });
   }
   // Fallback if method not available.
-  return await callback();
+  return await callback(getHomeyApi());
 }
 
 function buildDeviceCapabilityMap(devicesObj) {
@@ -65,10 +72,15 @@ function buildDeviceCapabilityMap(devicesObj) {
 function collectTokens(obj, maxMatches = 5000) {
   const tokenRegex = /homey:device:([0-9a-f-]{36})\|([a-z0-9_.\-]+)/gi;
   const matches = [];
+  const visited = new WeakSet();
 
   function walk(value) {
     if (matches.length >= maxMatches) {
       return;
+    }
+    if (value !== null && typeof value === 'object') {
+      if (visited.has(value)) return;
+      visited.add(value);
     }
     if (typeof value === 'string') {
       tokenRegex.lastIndex = 0;
@@ -112,8 +124,7 @@ module.exports = {
       const q = query && query.q ? String(query.q).toLowerCase().trim() : '';
       const limit = query && query.limit ? Math.max(1, parseInt(query.limit, 10) || 200) : 200;
 
-      const devices = await withToken(async () => {
-        const homeyApi = getHomeyApi();
+      const devices = await withToken(async (homeyApi) => {
         const devicesObj = await homeyApi.devices.getDevices();
         let devList = Object.values(devicesObj || {});
 
@@ -135,8 +146,7 @@ module.exports = {
 
   async getOrphanedDevices() {
     try {
-      const orphaned = await withToken(async () => {
-        const homeyApi = getHomeyApi();
+      const orphaned = await withToken(async (homeyApi) => {
         const devicesObj = await homeyApi.devices.getDevices();
         const knownIds = new Set(Object.values(devicesObj || {}).map(d => d.id).filter(Boolean));
 
@@ -190,8 +200,7 @@ module.exports = {
       const oldId = query && query.oldId ? String(query.oldId).toLowerCase().trim() : '';
       const newId = query && query.newId ? String(query.newId).toLowerCase().trim() : '';
 
-      const result = await withToken(async () => {
-        const homeyApi = getHomeyApi();
+      const result = await withToken(async (homeyApi) => {
 
         const [flowsRaw, advancedRaw] = await Promise.all([
           homeyApi.flow.getFlows().catch(() => ({})),
@@ -240,8 +249,7 @@ module.exports = {
         return [];
       }
 
-      const result = await withToken(async () => {
-        const homeyApi = getHomeyApi();
+      const result = await withToken(async (homeyApi) => {
         const [devicesObj, flowsRaw, advancedRaw] = await Promise.all([
           homeyApi.devices.getDevices(),
           homeyApi.flow.getFlows().catch(() => ({})),
@@ -302,8 +310,7 @@ module.exports = {
         };
       }
 
-      const result = await withToken(async () => {
-        const homeyApi = getHomeyApi();
+      const result = await withToken(async (homeyApi) => {
         const [devicesObj, flowsRaw, advancedRaw] = await Promise.all([
           homeyApi.devices.getDevices(),
           homeyApi.flow.getFlows().catch(() => ({})),
@@ -387,9 +394,8 @@ module.exports = {
         allowClassMismatch,
       } = body || {};
 
-      const result = await withToken(async () => {
+      const result = await withToken(async (homeyApi) => {
         const { runFlowConverter } = require('./flowconverter');
-        const homeyApi = getHomeyApi();
         return await runFlowConverter({
           Homey: homeyApi,
           oldIds: oldIds || [],
